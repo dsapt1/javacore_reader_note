@@ -1,0 +1,267 @@
+char4
+    LocalDate
+        java Date 时间是00:00:00 UTC, January 1, 1970 开始的一个the number of milliseconds
+        所以很难和人们使用的日历进行转换
+        LocalDate 操作人用日历
+    java 过时代码的检测
+        The JDK provides the jdeprscan tool for checking whether your
+        code uses deprecated features of the Java API. See
+        https://docs.oracle.com/javase/9/tools/jdeprscan.htm
+        for instructions. 小工具呃
+    改变和访问方法的区别
+        mutator method 改变原对象
+        accessor method 访问对象
+    创建自己的类
+        内部类 和public类在编译的时候会生成两个class文件
+        编译时会自动编译import 的java 文件 （会根据.java版本号判断是否要编译替代已有的class文件）
+    构造器的特点：
+        A constructor has the same name as the class.
+        A class can have more than one constructor.
+        A constructor can take zero, one, or more parameters.
+        A constructor has no return value.
+        A constructor is always called with the new operator
+
+        使用var 来定义变量 ，通过初始化来确定类型（java 10）
+        熟悉java api就会用的多，我真的不熟悉，好久都没翻过了
+        值限于本地变量使用， 不适用参数和成员变量
+    
+    构造对象的注意：
+        防止为null Objects.requireNonNullElse(source,replace)
+        Objects.requireNonNull(n, "The name cannot be null")
+        对象哪些值是必要， 哪些是可以为空的 ，非基本类型 作为成员变量是默认null tough love
+
+    隐式参数和显示参数：
+        this 关联隐式参数
+        对象实例调用方法，自己是作为隐式参数传递的 (方法名字之前) implicit parameter the target or receiver of the method call
+        显式就是括号里面的
+    java 中的方法inline
+        java中的方法都在类中但是不是inline 由jvm 由that are short, commonly called, and not
+        overridden, and optimizes them away
+    封装：
+        感觉访问器和翻遍器 ，感觉现在不怎么用到(用的最简单的set、 get方法)
+        As a rule of thumb, always use clone whenever you need to return
+        a copy of a mutable field （我总是返回可操作性对象，并直接改变值，我就是怎么操作的啊）
+    基于类的可访问权限
+        相同类实例可以直接访问互相的私有变量（惊了）
+        class Employee
+        {
+        . . .
+        public boolean equals(Employee other)
+        {
+        return name.equals(other.name);
+        }
+        }
+        一类的方法被允许去访问该类所有实例的私有变量
+        public private
+        final 修饰的成员变量 必须在构造器结束前进行初始化 (有些类是final 类)
+
+    static 修饰符
+        标明成员变量、常量或者方法属于类，而不是任何实例
+        native 方法可以绕过java 机制给 常量赋值啊（我的试试）
+        静态方式是没有隐式参数的（但是静态方法可以静态变量或者常量）
+        工厂类（通过静态方法获取实例）ex. LocalDate.now 
+        使用工厂累的原因{
+            1、 构造器名称必须和类相同，可以获取不同类的实例 如货币进制的实例，或者百分比实例（格式胡）（但是参数是一样的）
+            2、 使用构造器变化构造对象类型（生产的两个实例对象的类都是NumberFormat 的子类）
+            NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance();
+            NumberFormat percentFormatter = NumberFormat.getPercentInstan
+        }
+
+    main 方法
+        因为静态可以不创建任何实例就可以调用（从来没有想过）
+        通过这个方法开始创建所需的实例
+        使用supplier 
+
+    方法参数 （基本数据类型 、 引用数据类型）
+        传递值传递引用
+        the method gets a copy of all parameter values （java是给你一份备份（但是io里的指针不一样））
+        引用参数传奇的是地址值， 是copy一个对象变量引用相同
+        如何证明java 的引用参数值值传递  传两对象引用x,y，在方法内进行引用交换（原值参数引用值不会发生改变） 嗯值传递值传递
+        原传入的引用参数的值并没有发生变化。
+        This demonstrates that the Java programming language does not use call by
+        reference for objects. Instead, object references are passed by value （嗯很严谨）
+
+        方法能对参数产生的影响 （要和 c++比） （请使用静态方法校验，否则有隐式参数）
+        A method cannot modify a parameter of a primitive type (that is,numbers or boolean values).
+        A method can change the state of an object parameter.
+        A method cannot make an object parameter refer to a new object
+    
+    构造书写机制
+        重载 （方法名+参数 = 签名）
+        成员变量的初始化规则（）
+        fields and local variable 中文说不出（成员变量，本地变量）
+        空参构造 默认有，有其他构造后需要显示写出
+        使用静态代码块进行成员变量的初始化
+        可以在构造器中使用 this 调用同类中别的构造器 （非常诡异）
+        {
+            构造器赋值
+            声明赋值
+            初始化代码块赋值
+        }
+
+        对象构造过程
+        1. If the first line of the constructor calls a second constructor, then the
+        second constructor executes with the provided arguments.
+        2. Otherwise,
+        a. All data fields are initialized to their default values (0, false, or
+        null).
+        b. All field initializers and initialization blocks are executed, in the
+        order in which they occur in the class declaration.
+        3. The body of the constructor is executed.
+
+        静态代码块
+
+        jdk6 以上的金泰代码块可以直接写helloworld 不用main方法 （只有傻屌jdk6 可以）
+
+    对象的销毁和finalize 方法
+        , add a “shutdown hook” with (初学者没得用)
+        the method Runtime.addShutdownHook. As of Java 9, you can use the
+        Cleaner class to register an action that is carried out when an object is no
+        longer reachable (other than by the cleaner).
+    
+    包：
+        主要目的是保证类名的唯一性
+        使用import 来引用别的包里面的public类
+        * 只能引用单个包不能有复合式包
+        Static Imports  可以引入金泰方法和静态属性 （可能清晰可能不清晰）
+        有包的的class 运行需要在包的最基本层运行（而且的全类名）
+        javac com/mycompany/PayrollApp.java （编译和运行使用分隔符不同）
+        java com.mycompany.PayrollApp
+        编译在不依赖别的类时 不加包 不会出错
+
+        包之间的访问
+        默认同包之间可以互相访问
+        类成员变量要标记私有防止同包类的访问
+        classloader 不接受不用户自定义的java. 开头的包，第三方用jar 来防止外部影响
+        java9 使用模块来封装包
+
+    类路径（classpath  默认当前路径找）
+        JAR files use the ZIP format to organize files and subdirectories.
+        减小空间，提高运行效率
+        依赖的jar 包名是所在包名 ，加上jar 里面类本来的包名
+        c:\classdir;.;c:\archives\archive.jar （. 强调在当前目录）
+        /home/user/classdir:.:/home/user/archives/'*' 引入该目录下的所有jar包
+
+        由于使用maven 构建项目都不用classpath 了
+
+        jvm 找类的顺序
+        Suppose the virtual machine searches for the class file of the
+        com.horstmann.corejava.Employee class. It first looks in the Java （ java.lang  等）
+        API classes. It won’t find the class file there, so it turns to the class path. It  
+        then looks for the following files:
+        /home/user/classdir/com/horstmann/corejava/Employee.class
+        com/horstmann/corejava/Employee.class starting from the current directory
+        com/horstmann/corejava/Employee.class inside/home/user/archives/archive.jar
+        It searches for each of these classes in all of the locations of the
+        class path.
+        这些顺序都会去找如果找到多个会报错
+        比起jvm  compiler 还会去比较版本决定是不是去重新自动编译 （这个版本更新怎么控制的）
+
+    类路径的配置 （这设计到类加载，如何使用第三方类和本地不同包的其他类）
+        在运行的时候可以是有 -cp -classpath来指定运行的jar 包 （这样就可以不用总是上传jar包了）
+        我要提升上线的效率 
+        java -classpath /home/user/classdir:.:/home/user/archives/archive.jar MyProg
+        要写shell 脚本进行上线了
+        不咋适合我
+        export
+        CLASSPATH=/home/user/classdir:.:/home/user/archives/archive.jar
+        set CLASSPATH=c:\classdir;.;c:\archives\archive.jar
+        有傻屌程序会帮你吧 classpath指向某个值（配成环境变量），让你感受绝望
+        java9 类可以从模块路径进行加载
+        可以指定一个文件夹的依赖但是会替代一部分默认依赖
+        java.ext 放的jar就没了 但是可以放一起 （java9 废弃了）
+        java -Djava.ext.dirs="C:\c_workspace\jbtlog\target\classes\lib"  allinpay.jbt.log.LogApplication
+
+    jar 
+        （为了不让你那一个目录结构的class文件运行）
+        jar options file1 file2 . . .   cvf（options一般）
+        jar cvf test.jar ./classes 用于打包，会自动把jar包叨叨lib里面
+
+    Manifest 文件 （清单）
+        可以使用Name entry 来描述一些信息
+        ck here to view code image
+        Manifest-Version: 1.0
+        lines describing this archive
+        Name: Woozle.class
+        lines describing this file
+        Name: com/mycompany/mypkg/
+        lines describing this package
+        // 用于新建一个jar包
+        jar cfm MyArchive.jar manifest.mf com/mycompany/mypkg/*.class
+
+        Main-Class: com.mycompany.mypkg.MainAppClass 可以配置主函数清单
+        jar 打完包后需要在清单中设置主函数（否则无法启动）
+    jar运行（根据系统走）
+        windows javaw -jar (不会打开shell 窗口，java 会)
+        吧jar 封装成.exe 运行多么二逼的想法
+        java9 有 multi-release JARs 兼容不同版本的jdk （兼容多个发行版本的新jar包）
+        添加不同版本的类（终于开始删类了吗）
+        jar uf MyProgram.jar --release 9 Application.class （兼容多个发行版本的新jar包）
+        只为了兼容不同的jdk版本（看不太懂呃）
+    jar命令
+        一般都是-option
+        除了 操作tar 命令的签名没有 - 
+        java9 有又改了 --module-path --version
+        （概述作者认为单个字节的操作符容易产生误解）
+        jar -c -v -f jarFileName file1 file2 . . . // 不能连起来写
+    
+    javadoc 的操作
+        https://blog.csdn.net/fanxiaobin577328725/article/details/52658781
+        subpackages  可以递归子文件夹
+        还是有学习价值的 
+        分为 {
+            类注释
+            方法注释
+            字段注释
+            一般注释
+            包注释（需要大度穿件个文件用，package-info.java就好了）
+        }
+        package.class#feature label 这个格式可以链接一个方法
+        @see com.horstmann.corejava.Employee#raiseSalary(double)
+        @index entry 用于提供搜索入口
+        javadoc -d docDirectory *.java ()
+        针对很琐碎的功能我服了          不过javadoc 还真是一个强大的工具啊
+    总结：
+        使用不会改变原实例的类（返回新的）可以带来线程安全（吃点内存算什么）
+        面对对象语言的特色功能： 继承和多态
+
+char05
+    类、父类、子类
+        基础特点
+            is-a 关系是继承的特点
+            super 和 sub 是集合概念superset subset
+            父类是共有方法、子类是私有方法
+            子类父类实例不共用私有变量，同类实例是可以的
+            子类访问父类的私有变量的时候是通过父类的共有方法的（好像还没在子类方法中操作过父类变量呃 通过super 调用）
+            super和this是不同 （super不可以吧自己的值分配给其他的对象变量，this可以） （java 弱化了某些关系）
+                this 和 super {
+                    this 1 自身实例引用
+                         2 调用自己的其他构造器
+                    super1 调用父类的共有方法
+                         2 调用父类的构造器
+                }
+        子类构造器
+            会通过super 指令调用父类构造器 （java数数 到底有多少对象呢）
+            调用父类构造器是因为子类构造器无法直接使用父类的私有属性
+            构造器的优先执行对第一行的调用别的构造器
+    多态：
+        基本概念
+            父类对象变量可以引用子类实例，并调用子类重新实现的功能 （jvm know the type of object）
+            多态的本质是 动态绑定 （可以final修饰方法取消 就是不能重写了啊）
+            父类应用子类时只能调用父类已有的方法（重新的调用子类的，但不能调用父类没有的）
+            注意： 虽然可以吧子类数组直接 转换为父类数组， 单无法存父类对象（数组类型由创建时确认）
+        方法调用过程：
+            1、2 确定方法   3、4 进行绑定
+            1、 首先找到对象的声明类型和方法名（包括重载的，父类和该类交这个名字的所有方法）
+            2、 根据参数进行 overloading resolution （ 但是有与类型转换 过程很复杂 有基本数据强转，还有子类转换）
+            子类重写父类方法是在返回类型兼容时可以 改变返回类型， 但是不能改请求参数、
+            3、 private, static, final, or a constructor 可以名曲知道调用哪个方法 这些事（静态绑定方法）
+                {
+                    静态绑定可以直接由隐式参数（调用者）的类型决定
+                    动态绑定的类型需要在运行时决定 （编译器和jvm 谁来决定呢  compiler 标明访问的方法 ，jvm 生成相应的实例进行访问（动态生成））
+                }
+            4、 jvm会根据真是类型去调用方法，如果真实类型是子类实例，并且重写调用方法，则调用子类方法，否则通过调用父类方法
+            jvm 会建立 a method table 罗列所有方法签名 和真实调用的方法 （调用父类方法会去访问查询父类的方法表）
+
+            动态绑定，是我们在不用更新代码的情况下添加额外的功能 （你不要去重新编译旧的代码，因为准确的类型是jvm去确定的）
+            

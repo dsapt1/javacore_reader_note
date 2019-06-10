@@ -1,0 +1,521 @@
+char05
+    多态
+        final 修饰阻止继承
+            final修饰的类只有方法是final修饰的，成员变量不是
+            目的是为了是方法的实现不被改变，或者不会产生子类实例
+            java中的多态是不需要标明直接使用的c++ 必须声明
+            final以前可以提高方法被内联的可能性 （但just-in-time compiler更加聪明）
+            内联方法根本不会啊
+        强转
+            使用 instanceof 判断后再近些强转 
+            x instanceof C 不会 x为null 产生异常
+            目的 {
+                为了该对象的全部功能（父类引用转为子类引用） 向下强转
+            }
+            少用强转就是了
+        抽象类：
+            变的更像其他类的组成，而不是一些特殊的实现
+            为了高度抽象一部分功能
+            通过abstract 构造抽象类和方法 
+            让普通方法和抽象共存（反正都是爸爸的方法）
+            继承抽象类要么也是抽象类，要么实现抽象方法
+            抽象类是无法实例化的 抽象类的对象引用只能指向子类实例 （抽象类有构造方法吗 ，有的只可以被子类调用）
+            用的不多主要 java 有interface 啊
+        Protected Access
+            protect 允许子类访问父类的 成员 和方法
+            protect 允许同一包所有其他类访问 ，不同包只能子类
+            protect 的机制只允许子类访问自己内置的（调用父类构造的）父类变量（不会干扰到其他子类实例）
+            主要用于修饰方法 （不将方法暴露给不是子类的类）
+            clone 是 Object 中的一个 protect 方法 （惊了）
+        java的四种权限修饰符
+            1. Accessible in the class only (private).
+            2. Accessible by the world (public).
+            3. Accessible in the package and all subclasses (protected).
+            4. Accessible in the package—the (unfortunate) default. No modifiers are needed.
+
+    Object (宇宙级的父类) 初步了解
+        基本概念
+            如果没有父类显示提及，就会继承这个类，所以是所有类的父类
+            java 多线程用到Object 在char12 见
+        Object类型的引用 变量
+            可以接受任何实例引用（也只能持有，没法使用特别功能）
+            基本数据类型 不是Object 对象 （C++ 没有超类 ，反而把指针指向空指针 啥意思啊）
+        equals 方法
+            默认实现比较的地址值 如PrintStream 就可以 
+            但是大部分时候我们是比较实例的state 是否相同
+            重新步骤： （equals 传入的参数是Object）
+                1、调用父类的equals方法 Object父类是先比较地址值
+                2、比较类是否相同
+                3、进行强制比较具体的状态
+                Objects.equals(a,b) 可以用来比较null 指针 用不到都为null的情况要避免
+            重写需要遵守的规则{
+                1. It is reflexive: For any non-null reference x, x.equals(x) should
+                return true.
+                2. It is symmetric: For any references x and y, x.equals(y) should
+                return true if and only if y.equals(x) returns true.
+                3. It is transitive: For any references x, y, and z, if x.equals(y)
+                returns true and y.equals(z) returns true, then x.equals(z)
+                should return true.
+                4. It is consistent: If the objects to which x and y refer haven’t changed,
+                then repeated calls to x.equals(y) return the same value.
+                5. For any non-null reference x, x.equals(null) should return
+                false.
+            }
+            子类实例的比较和父类实例的比较（不能比较子类特有属性，直接用父类的equals 不就好了）
+            使用getclass 和instanceof 的区别 hashset 和TreeSet 有不同的equal是方法两个比较过程是啥呢
+            特制一类实例用getclass  子类父类实例用instanceof 最好可以有个唯一标识用于比较id之类
+            写equals 方法的一般步骤{
+                1、比较地址值是否相同 （最快） 调用者不会为空
+                2、是不是null （不要判断）
+                3、同类用getclass ，包括子类 用instanceof
+                4、进行类型强转
+                5、比较字段（Objects(a,b) 非空处理）
+            }code
+            重写方法加上@Override 标识
+        hashCode方法（一般和equals 绑定）
+            String 的hashcode 取决内容所以一样的字符串不同对象hash值一样
+            StringBuffer 的hash值与内容无关 使用是Object默认的hash值 对象内存地址
+            自定义hash
+            return 7 * Objects.hashCode(name)
+            + 11 * Double.hashCode(salary)
+            + 13  * Objects.hashCode(hireDay);
+
+            Objects.hash(name, salary, hireDay) 这是要怎么用啊
+            相同的对象严格意义上要返回相同的 hash值
+            基本数据分装类型的hashcode 也是被重写的
+        toString() 方法
+            内置是类名+ hash值
+            java默认在做字符操作是会调用 toString() 方法
+            用json 的我根本不会重写toString 方法
+
+        getClass()
+            获取class 方法除了获取类名，还可以getSuperclass() 获取父类的class 对象
+
+    一般的数组集合（Generic Array Lists）
+    ArrayList
+        基本概念
+            解决数组大小初始化大小问题，提供随意增删元素的方式
+            一般会用泛型规定所持有的数据类型
+            ArrayList<Employee> staff = new ArrayList<>()  右侧的<> 叫做钻石语法服了
+            ArrayLIst 比Vector 更高效（有一个失败者）
+            数组长度是arrayList 自动维护的 （创建个大的复制过去并且重新执行 估计有native 方法）
+            ensureCapacity 可以规定数组长度在你知道确定的情况下 （避免再分配的消耗）
+            new ArrayList<>(100) 初始规定 大小
+            new Employee[100]  已近有100 个默认值被持有，ArrayList 还没有
+
+            使用trimToSize 可以删除多余的内存占用释放空间 （裁剪合适的内存块） 确定了就这个场独立不在改变了
+            集合的容量 和 集合的大小是两个概念 capacity and size
+        获取集合中的元素
+            arrayList 不是java语言设计的一部分（获取 改变数据并不方便，需要通过专门的方法）
+            list.set(0, x);  只能用于替换，原位置必须已经有值
+            arrayList 指定位置添加和删除元素时 都会copy指定位置后面的所有元素 （所有增删效率不高，why）
+
+            数组和 数组集合的区别
+            长度是否可变，是否有固定长促的初始值，获取修改元素的方式不同 （都是有index 感念的）
+            看下 remove ，insert 方法的影响
+        类型限定和非类型限定的arrayList的区别
+            java 编译报错是什么时候， java为了向下兼容会将所有的泛型 转换为非泛型限定 （编译检查但不编译进去）
+            (ArrayList) and (ArrayList<Employee>) 在运行时强转出的效果是一样的
+    Object 封装器，和自动装箱
+        wrappers Intger 是int 的封装器 这些封装都是 值都是不可变的 用final 修饰了在构造的时候初始化的
+        ArrayLIst<Integer> 由于封装的原因 效率远低于 int[]
+        基本类型和其分装类的转换叫做自动装箱拆箱 （从C# 学来的的）
+        int n = list.get(i).intValue(); 这部分工作是由编译器帮你干的
+        封装类的大小比较 -128 - 127 封装在固定的对象中地址值相同，其他不相同 
+        封装实例可以为null
+        Integer n = 1;
+        Double x = 2.0;
+        System.out.println(true ? n : x); // prints 1.0 (这样都会做类型升迁)
+
+        强调装箱和拆箱是编译器干的，不是jvm
+        这些封装类可以放一些方法（字符串转数字的方法，找个地方随便放下） 
+        toString(int i, int radix) 可以有不同的进制进行显示      
+    可变数量的参数
+        printf 就是个例子
+        可变参数的定义：
+            public return printf(arg, Object... args) 本质是个Object 数组 
+            基本类型会自动进行装箱操作进行适应
+            The compiler needs to transform each call to printf, bundling the parameters into an array and autoboxing as necessary:
+            由编译器干这活进行参数的实际绑定
+        使用情况：
+            在参数个数不确定的情况下
+            System.out.printf("%d %s", new Object[] { new Integer(1), "widgets" } ); （你这样写编译器就不用干活了）
+
+            可以止痒写主方法
+                public static void main(String... args) (惊了 还真可以)
+
+    枚举类
+        基本特色
+            枚举产生的枚举都是实例用 == 就好了 ，equals 是用于比较实例里面的数据类型
+            public enum Size { SMALL, MEDIUM, LARGE, EXTRA_LARGE } （里面可以完全没有属性）
+            枚举的构造器默认是私有的
+            枚举中的toString() 返回名称 如Size.SMALL.toString() 直接返回 “SMALL” 已近重写了toString()
+        常用方法
+            Enum.valueOf(enumclass,name) 根据枚举类型和名称获取 枚举实例
+            values() 返回该枚举类型的数组
+            ordinal() 返回顺序  zero-based
+            这个类其实是 继承了Enum<classname> 但是被省略了
+            For example, the enumerated type Size actually extends Enum<Size>
+            compareTo() 根据定义的顺序返回
+    反射
+        基本概念
+            一个程序可以分析一个类的功能叫做反射。
+            提供了一套丰富且精心设计的工具集用来操作java代码动态的
+            通过接口创建、类关系映射、等工具动态的获取类 的能力
+        反射的功能
+            Analyze the capabilities of classes at runtime
+            Inspect objects at runtime—for example, to write a single toString method that works for all classes
+            Implement generic array manipulation code
+            Take advantage of Method objects that work just like function pointers in languages such as C++
+            4 点我就知道第一点 （嗯我会都知道的）
+        Class 类
+            runtime type identification jvm 一直在做运行时类型校验
+            类的信息可以通过 getClass 获取 （调用才会获取这个实例） 用于描述类的属性
+            方法：
+                实例.getClass() 获取
+                Class.forName（类名） 来获取该类的class 对象
+                类名.class 获取
+
+                getName() 获取全类名
+                main的启动就是我找我依赖的类，我依赖的类找他们依赖的类（击鼓传花）
+                什么鬼 main之中Class.forName() 假装快速启动，什么骚操作
+            注意：
+                int.class 也是可以的 虽然int不是class 直接装箱了
+                获取的Class 对象是有泛型限制的
+                jvm 为每种类型创建唯一独特实例（父类子类 是单独的分类） 所以用 == 就可以比较是否相同了
+            用法：
+                通过getConstructor().newInstance(agrs) 就可以获取实例（可变参数啊） 源码号诡异啊
+                这里没有空参构造就会报错（需要别的方法或器具其他的构造方法 ） 
+                Exception 里有分被检查的和没有被检查的 （编译报错需要）
+        异常的声明
+             unchecked exceptions and checked exceptions（编译时检查 expect a handler）
+             java api 一般抛出checked Exception 让你解决 这种异常要么被往上抛，要么解决
+
+        资源：（java 如何加载别的资源文件）
+            包括（没见过啊）
+                Image and sound files
+                Text files with message strings and button labels
+            获取方式：
+                1、 直接通过类获取 类对象
+                2、通过url
+                3、通过  getResourceAsStream  读取
+                Class cl = ResourceTest.class;
+                URL aboutURL = cl.getResource("about.gif");
+                InputStream stream = cl.getResourceAsStream("data/about.txt"
+            打包这样打进去
+                jar cvfe ResourceTest.jar resources.ResourceTest \
+                resources/*.class resources/*.gif resources/data/*.txt corejava/*
+                java -jar ResourceTest.jar      （现在的目录机构还是黑魔法吗都是jar 命令一点点做的）
+                目录 class lib resource mf文件（不要总是那么黑魔法了）
+                InputStream java9 有readAllBytes() 的方法，java8 还得用数组去接麻烦（要会常用io类）
+
+        使用反射分析类功能 （最重要的功能） 针对Class 对象进行分析
+            实现 java.lang.reflect
+                Field, Method, and Constructor in the java.lang.reflect package 
+                describe the fields, methods, and constructors of a class
+                都有getModifiers 返回有多少个修饰语
+                Modifier 可以分析这些修饰词 可以根据上面的数 mod & TRANSIENT 这样 来分析判断有没有这个修饰词
+            使用分析类 （获取Class 对象进行一堆操作）
+                getFields, getMethods, and getConstructors 获取 public的 包括父类
+                getDeclaredFields, getDeclaredMethods, and getDeclaredConstructors 获取不包括父类的所有成员
+                通过getModifiers 确定前面有没有 Modifier 可以用 Modifier.toString() 获取
+                参数，名称，返回都是可以获得的参考打印代码
+                看下打印代码？
+                getPackageName 可以获取包名  getDeclaringClass getExceptionTypes获取（方法构造器上的异常）
+            
+            使用反射分析运行时的对象 （了解你不知道的类）
+                1、 获取Class 对象
+                2、 获取Field 对象
+                3、 field.setAccessible(true) 获取权限操作私有变量（也可以获取方法吧）
+                4、 field.get(实例)         获取该该实例的该变量值 （返回的是Object，不过类型你可以获得）
+                使用 field.set(实例，value) 可以设置值 
+                这个收权限限制
+                这朱啊哟是给debugger 、 持久化存储 、和相似机制提供的功能
+                这种获取可以被拒绝如果 使用security manager 或者java9 的module system （java 9 要拉出来批斗）
+                但是java9 也就叫叫 （用于开启模块，关掉警告）
+                java --add-opens java.base/java.util=ALL-UNNAMED \
+                --add-opens java.base/java.lang=ALL-UNNAMED \
+                objectAnalyzer.ObjectAnalyzerTest
+
+                可以使用Lookup 在java9中获取这种权限
+                反正获取别的模块的私有成员 的权限有待商讨
+            a generic toString （一个泛型toString()方法）
+                通过反射实现通用的toString 还需要递归调用 内含对象的toString()方法
+                要点{
+                    1、 防止重复引用的对象 ，要加集合记录 (防止无限重复栈溢出)
+                    2、 判断为null
+                    3、 判断是否字符串
+                    4、 判断是Array 还是其他对象
+                    5、 判断是否基本类型
+                    6、 判断是否有父类，父类私有属性需要循环向上找
+                }
+            generic Array 通用数组（泛型数组的实现）
+                通过java.lang.reflect.Array 动态创建数组 (获取一个新长度的数组)
+                关键是要能返回一个相同类型的数据 ，就是定义一个类型相同的数组 
+                (数组用什么定义就是什么类型，就是强转后也不能接受非定义类型的实例)
+                Array.newInstance(class,length) 根据指定类型生成指定长度的数组
+                {
+                    1. First, get the class object of a.
+                    2. Confirm that it is indeed an array.
+                    3. Use the getComponentType method of the Class class (which is
+                    defined only for class objects that represent arrays) to find the right type
+                    for the array.
+                }
+                参数接受是Object ，就可以兼容基本变量的数组
+
+            运行任意的方法和构造函数
+                （代替方法指针 c c++ 可以 但危险） 用interface 和lambda表达式处理
+                用反射是实现 Method 的invoke 方法
+                Object invoke(Object obj, Object... args) 嗯就这么不想写Object[] 吗
+                前面隐式参数 、 后面显式参数  (静态方法填 null 就可以了) 
+                invoke 返回的基本类型都要装箱封装 返回 （所以只能用封装类型进行强制）
+                class.getMethod(方法名)
+                Method getMethod(String name, Class... parameterTypes) 还得加上参数类型不容易啊
+                Constructor getConstructor(Class... parameterTypes) 直接上类型 然后newInstance（Clas.. parameterTypes)
+                基本类型参数不能用封装类型的class 否则找不到方法
+                反射获取方法是低效且易出错的（那我学着干嘛的） （一般情况下接口和lambda表达式就够了）
+                用这种的以前都是回调
+    使用继承编程的建议
+        {
+            1. Place common operations and fields in the superclass.
+            2. Don’t use protected fields （子类可以有很多，且同包的其他类也可以访问）
+                可以用在方法上
+            3、Use inheritance to model the “is–a” relationship. （不要多余）
+            4. Don’t use inheritance unless all inherited methods make sense. 
+                （不需要的方法不要继承，跟多是避免多余的方法产生的额外影响）
+            5. Don’t change the expected behavior when you override a method. （重写也是做相同的事）
+            6. Use polymorphism, not type information （why 具体类型不是挺好的吗）
+                {
+                    if (x is of type 1)
+                        action1(x);
+                    else if (x is of type 2)
+                        action2(x);
+                    x.action(); 给jvm找活干
+                }
+            7. Don’t overuse reflection. （错误只有运行时才能发现，但是很强大，看源码的时候打望打望呃）
+        }
+    java 实现面对对象的基础
+        supports the fundamentals Javaof object-oriented programming: classes, inheritance, and polymorphism.
+
+char06 （非常重要的java工具）
+    接口
+        基本概念
+            描述需要做什么，没有具体实现，一个类可以实现多个接口。 
+            ex： Arrays 的sort 方法public static <T> void sort(T[] a, Comparator<? super T> c)  对Comparacomble接口的
+            实现
+            接口所有的方法默认使用 public修饰 ，接口只有常量
+            java8 可以在接口中实现部分方法（不能使用instance fields）
+            接口的的功能实现都需要交给实现类完成。
+        实现类的方法
+        {
+            1. You declare that your class intends to implement the given interface.
+            2. You supply definitions for all methods in the interface （全要加上隐藏的public 修饰词）
+        }
+        Comparacomble 接口实例
+            java 5的 Comparacomble<T> 是有泛型支持的， 不需要进行Object 强转了
+            动不动就超多数字 的取值范围
+            一般compareTo 和equals 方法是兼容 的 结果一致的
+            有趣的反例{
+                BigDecimal. Consider x = new BigDecimal("1.0") and
+                y = new BigDecimal("1.00"). Then x.equals(y) is
+                false because the numbers differ in precision.But
+                x.compareTo(y) is zero.
+            }
+            Array.sort(Object[]) 内部进行强制
+        使用interface 的原因
+            java 是一种强类型的语言，调用方法是需要确定类中一定要有方法，不过事先接口，就证明一定有方法。
+            事先接口能确保方法的实现。不会出现调用方法时候导致jvm 抛出异常
+        继承类对父类接口方法的实现
+            泛型会沿用父类的泛型需要特别的处理
+            子类需要重写父类 实现的接口 需要注意接口泛型的情况 如compareable<T> 这种接口
+            子类比较父类实例时 需要注意类型转换问题（父类无法转换成子类）
+            如果只想子父类共用一个比较方法，就对父类的比较方法使用final 进行修饰
+            在子类中实现一个新的比较方法，会引起多态不适配的问题，所以最好不要干
+            {
+                1、 每次compare 的时候都进行类型判断，否则抛出类型转换出错误
+            }
+        接口的属性
+            {
+                1、没有实现方法
+                2、常量
+            }
+            没有实例或者使用new 操作符，但是可以声明接口变量 用于接收实现类的实例    
+            anObject instanceof Comparable 判断是是否实现该接口 
+            接口也是可以被继承的 （被其他接口继承，类只能实现）
+            类可以实现多个接口用于定义类的行为（方法）
+
+        接口和抽象类之间的区别
+            java 中累的继承一个类，但是能实现多个接口
+            使用接口是避免多继承的代码复杂和低效
+        static 和private 方法
+            java8 运行 可以使用static/default 定义有实现的方法
+            可以使用接口调用方法Path 接口 有啥好处呃 除了违法接口抽象的精神 但是统一了Collection/Collections
+            无需新建个工具类提供静态方法，直接在接口中提供这些方法。
+            java 9 添加了private 修饰的static / instance method 感觉接口承受了它不该承受的功能
+        default method (就不怎么待见)
+            由于提供接口方法的默认实现 （感觉有点意思啊）
+            //Iterator 接口 ，只读不需要实现remove方法 默认直接给你抛个错误
+            default void remove() { throw new UnsupportedOperationEx
+            Collection （AbstractCollection） 中的 isEmpty() 方法，也是用的默认实现。
+            主要作用用于在接口演化 添加新的方法的时候 不用染旧实现实现新的方法
+                Collection 添加了 Stream() 方法
+            在已经稳定运行的接口中添加a nondefault method 是一个具有风险和麻烦的事情
+        解决 default method 冲突
+            默认方法和接口和实现类冲突时解决方法
+            {
+                1. Superclasses win. If a superclass provides a concrete method, default
+                methods with the same name and parameter types are simply ignored. （防止影响其他有实现的方法）
+                2. Interfaces clash. If an interface provides a default method, and another
+                interface contains a method with the same name and parameter types
+                (default or not), then you must resolve the conflict by overriding that
+                method(接口冲突需要手动解决，方法签名相同随便选个实现下就可以了，单继承类不吹出现，实现接口才会出现)
+            }
+            Object 里的方法由于 1 原则，是无法使用default 改变的，谁让它是顶级superclass呢
+        interfaces 和回调
+            java 中的interface 是java 实现回调的一种方式。
+            回调是一种代理模式 （提供方法的具体实现）
+            在知道需要调用指定方法，但不知道方法的具体实现的情况下，可以将方法（具体实现）作为参数进行传递
+            java 中是实现某个接口的实例 来实现回调的，调用传入接口实例的指定方法，获取具体实现。
+            回调（目前理解） 将具体的实现方法作为参数传递，调用的方法会调用传入的具体方法参数，所以叫做回调
+            教程里讲那么多swing 包的内容是要干嘛
+        interface 的一些使用
+            Comparator Interface
+                比较器（接口的一个经典使用，和回调结合使用） Arrays.sort(Object[],Comparator)
+                像这些就可以和lambda 一起使用
+            对象克隆(Cloneable) （标记接口）
+                分为深拷贝和浅拷贝
+                cloneable 中没有任何方法和属性，只是表示可以clone ，方法来自Object，用于jvm 识别到底有没有
+                实现clone方法
+                obj instanceof Cloneable 可以调用clone 方法             
+                蛋疼的看https://www.zhihu.com/question/52490586/answer/130786763
+
+                原始的copy 对象实例关联一个新的 对象引用，对象还是一个（引用参数传递所使用的clone 方式）
+                Object 中的clone 用native 修饰没有具体方法体 （只能成员变量值得进行复制， 如果还有引用变量就会复制相同的地址值）        
+                所以需要具体的实现来避免 潜克隆（防止复制对象和原对象共用相同的属性）
+                如果属性引用属性不变化怎没有问题，否则需要重写clone 方法（不是用工具类吗）
+                是否重写克隆的选择 （使用工具类）
+                {
+                    1、默认clone 方法是否够用
+                    2、对动态属性进行进行clone重写
+                    3、clone 方法是否能被访问
+                }
+                Object中 clone 使用protect 修饰但不能直接被子类使用（机制诡异）（只能使用自己的方法克隆自身对象
+                所以需要实现cloneable 接口调用默认方法，或者重定义（也要实现cloneable接口））
+                这是什么鬼接口啊
+            
+                是否使用克隆：数组有克隆方法可潜克隆，jdk 克隆节本都是潜克隆，深克隆需要使用特别的工具类使用反射解决。
+    lambda表达式
+        基本概念
+            一种可以展示跳过的代码块。 
+            传统回调都是丢一个匿名实例到方法里面的，方法通过匿名实例来运行一段代码块。（丢方法块也要对象）
+            回调方法（根据用户具体方法需要实现特定的功能）
+            替代部分需要通过 interface 实现的功能。
+        语法：
+            (String first, String second)
+                -> first.length() - second.length()
+            所有的参数都要传递到这个代码块中，类型在已知的情况下可以忽略（有jvm解决）
+            空参() 只有一个已知类型参数时可以省略() 
+            返回值类型不能定义 由代码块内容决定
+            public Timer(int delay, ActionListener listener) 第二个参数就可以用lambda 表达式，而非实例
+        function interface（java中用于传递方法的接口） lambda可以兼容这些接口
+            一个接口只有一个抽象方法的实例被使用时就可以使用lambda表达式提供方法实现，这些接口被叫做function interface
+            lambda表达式可以直接作为参数传递到需要这些接口实例的方法中
+            lambda表达式可以使用接口接受 ，没有特别function类型
+            lambda 表达式不可以分配给object
+            lambda 表达式后台调用时都直接调用唯一方法并传入参数。
+            BiFunction<T, U, R> 可以用于接受一部分表达式
+            回调方法，是有一部分公共方法，但还有一部分具体细节需要提供。
+        一些功能接口
+            Supplier<T> ，接受这个接口的方法，可以返回T实例，T可以使空参亦可以是有参，可以用于强迫个初始值等
+            （） -> 获取的初始值是延迟的只有需要才会加载
+        method reference：
+            :: 使用这个传递method reference
+            var timer = new Timer(1000, System.out::println) 只需要打印时间可以直接传方法
+            System.out::println 让编译器去实现一个实例 actionPerformed(ActionEvent e) 调用 System.out.println(e)
+            本质(感觉像一种语法糖)
+             {
+                Like a lambda expression, a method reference is not an object. It
+                gives rise to an object when assigned to a variable whose type is a
+                functional interface.
+            }
+             Runnable task = System.out::println的抽象方法没有参数，所以只会打一个换行
+             Arrays.sort(strings, String::compareToIgnoreCase)
+            :: 的使用类型{
+                1. object::instanceMethod
+                2. Class::instanceMethod
+                3. Class::staticMethod
+            }
+            1、 中和lambda表带是等价 （x）-> {}
+            2、 需要要将隐式参数传入  (x,y) -> {}
+            3、 所有参数传入静态方法
+            例子：list.removeIf(Objects::isNull); 简化书写
+            可以用this super  只带当前实例，和父实例的方法
+        Constructor References
+            new Object()[]     应用数组不能直接指定长度可以使用 Objeect::new 来指定
+            Person[] people = stream.toArray(Person[]::new); 直接将Object类型指定位指定类型
+        变量作用域
+            lambda 表达式的组成{
+                1. A block of code
+                2. Parameters
+                3. Values for the free variables—that is, the variables that are not
+                parameters and not defined inside the code
+            }
+            传入lambda代码块的值是复制进去的，因为lambda要作为参数传递，所以只能复制值
+            lambda中的值是不可以变的，因为存在并发问题，lambda中获取抓取的值都是final
+            引用变量的存在是lambda 表达式依旧存在线程安全问题，需要由调用的方法解决线程安全问题
+            lambda 只能抓取不变的变量，变化的不能，比如外部循环中的i，应用变量也不要在里面使用最好（否则自己控制线程安全）
+            lambda 中this关联的是创建lambda的对象，所以lambda 不能有和该方法中变量名相同的变量
+            （lambda作用域是内嵌在初始方法中的，所以this关键字具有相同意义）
+        运行中的lambda表达式（写写能消费lambda 表达式的方法）
+            lambda 运行大的关键是延迟运行
+            一些理由{
+                1、在一个单独的线程运行代码
+                2、多次运行方法
+                3、运行代码在算法恰当的时间（比如比较算法
+                4、触发的时候才运行代码
+                5、只有需要时才运行的代码
+            }
+            示例：多线程的
+            public static void repeat(int n, Runnable action)
+            {
+                for (int i = 0; i < n; i++) action.run();
+            }
+            repeat(10,() -> System.out.println("多线程运行中"));
+            调用action.run() 时开始运行lambda表达式
+
+            public static void repeat(int n, IntConsumer action)
+            {
+            for (int i = 0; i < n; i++) action.accept(i);
+            }
+
+            repeat(10, i -> System.out.println("Countdown: " + (9 -i)));
+            使用IntConsumer 会比  Consumer<Integer> 有更高效率
+
+            Function接口有很多存在许多结合方法
+            Predicate.isEqual(a).or( Predicate.isEqual(b)).test(x)  // test的时候进行调用
+            x -> a.equals(x) || b.equals(x)；
+
+            自定义函数接口可以加上@FunctionalInterface 编译有连个抽象会报错，javadoc 会进行标明
+        Comparators (深入了解)
+            Comparator.comparing(Person::getName)) 根据
+
+            public static <T, U extends Comparable<? super U>> Comparator<T> comparing(
+                Function<? super T, ? extends U> keyExtractor)
+            {
+                Objects.requireNonNull(keyExtractor);
+                return (Comparator<T> & Serializable)
+                    (c1, c2) -> keyExtractor.apply(c1).compareTo(keyExtractor.apply(c2));
+            }
+
+            可以通过Comparator.comparing(Person::getName)) 调用直接传递的方法 返回的是lambda表达式
+            使用 thenComparing 可以继续加排序条件
+            Arrays.sort(people,
+                Comparator.comparing(Person::getLastName)
+                .thenComparing(Person::getFirstName));
+
+        注意事项
+        lambda expressions 和 method references 都不是对象，在They are always turned into
+        instances of functional interfaces.
+
+
+ 

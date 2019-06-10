@@ -1,0 +1,2 @@
+log4j.additivity 可以决定吧不把日志添加rootLogger 中
+日志用名称空间在获取Logger是输入

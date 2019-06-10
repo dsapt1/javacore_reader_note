@@ -1,0 +1,168 @@
+java 的十一种特性：
+1. Simple （砍掉c++ 烦躁的功能， 并且更小能在嵌入设备使用）
+2. Object-Oriented 接口取代多重继承
+3. Distributed 基于socket 的各种网络协议实现的
+4. Robust   有编译器发现很多运行错误、用指针模型防止内存重写和数据修改。
+5. Secure   想用沙箱运行未收信任代码，但是有bug
+6. Architecture-Neutral 编译器编译成字节码文件并在不同的jvm进行运行。 （jvm运行原理）
+7. Portable
+8. Interpreted      jshell 的支持快速探索性的编程 （解释性的新增考点）
+9. High-Performance  just-in-time compiler 
+10. Multithreaded   返回 和实时 行为
+11. Dynamic
+
+总有听说过的上古语言。
+
+想想当年为了一种设备就写一个语言啊。现在我都在干些啥。
+java 先做的机顶盒，不行继续做浏览器
+
+1.1 有的反射
+企业版有额外的jar包
+
+java6 2006 发布 到2011 发布java7 （因为公司经营不良）
+java8 易于多线程运行表达式（线程的控制需要了解）
+java9 的模块化工作是从2008年开始的 11年花费 2017 年发布
+
+java 此后每6个月发布一次 现在的java11 是稳定支持版本。
+Table 1.1 Evolution of the Java Language
+VersionYear New Language Features Number of
+Classes and
+Interfaces
+1.0 1996 The language itself 211
+1.1 1997 Inner classes 477
+1.2 1998 The strictfp modifier 1,524
+1.3 2000 None 1,840
+1.4 2002 Assertions 2,723
+5.0 2004 Generic classes, “for each” loop, varargs,
+autoboxing, metadata, enumerations, static
+import
+3,279
+6 2006 None 3,793
+7 2011 Switch with strings, diamond operator,
+binary literals, exception handling
+enhancements
+4,024
+8 2014 Lambda expressions, interfaces with default
+methods, stream and date/time libraries
+4,240
+9 2017 Modules, miscellaneous language and library
+enhancements
+6,005
+
+
+java还是个语言
+
+To obtain even more source (for the compiler, the virtual machine,
+the native methods, and the private helper classes), go to
+http://openjdk.java.net.  jdk 中的源码只有公共lib 的源码编译器，虚拟器需要下载。
+
+
+java 命令运行class 文件时候不用加.class
+
+jshell java 9 开始的使用
+Math. + tab 键所有可运行的方法 命令敞口的方法名补全
+jshell 可以学习java语言和类库方法。
+
+java 语法基础
+main 方法必须且是public 修饰
+部分语言回车就是语句结束
+4种整数类型 2 种浮点类型 一种字符型 一种布尔型
+0x 16进制 0 八位 0b 二进制 0b001_110_011 （可以添加下滑线让人识别）
+
+Integer 和Long 提供无符号的运算 0x1.0p-3 16 进制用p代替e作为指数
+
+金融计算不能使用基本嗯数据类型
+
+char 在\u0000 \uFFFF 这些16进制数之间 可以在非引号的地方使用 \u 会优先解析后面有没有16进制码
+
+utf-16 编码U+1D546 and is encoded by the two code units U+D835 and U+DD46 可以解析为两个utf-8单元
+U+D800 to U+DBFF 是第一个单元 U+DC00 to U+DFFF for the second code unit 其余的是一个单独字符
+最好还是用字符串 进行字符集的操作
+
+变量和常量
+java9 中 _ 单个下划线变成保留字段不能再用来命名变量名了
+
+使用var 的前提是要初始化 根据初试化值获取类型
+
+枚举的实现源码
+运算符
+整数整除就是 整数   还有取余%
+
+java 为了可一致性对于中间计算记过是需要去查速断去除 保证一致性，但是影响性能，现在是用 strictfp 来保证结果的可重复性。
+主要是浮点数计算使用的寄存器不同。public static strictfp void main(String[] args
+
+数学方法和常量 
+floorMod 解决取余是负数的情况
+StrictMath 应用在更看重结果的情况下
+使用操作符无算可能引发溢出风险（超过数据类型上限或者下限） 可以使用方法会抛出异常
+
+java 稀奇古怪异常宝典
+
+数据转换
+float 和double需要确认 浮点数在计算机中的储存范围需要确定
+数据类型强转会失去精度
+http://www.cnblogs.com/jillzhang/archive/2007/06/24/793901.html
+运算符会有强转标识
+x != 0 && 1 / x > x + y // no division by 0 短路与可以防止运算错误。（好像从来没有这样写过）
+
+为运算符是直接操作整数大的储存字节
+& (“and”) | (“or”) ^ (“xor”) ~ (“not”)
+运算为糟糕的运算顺序
+
+string
+java 11 有repeat方法神经病啊
+
+String 不可变的原因方便编译器安排字符串的分享 在序列不变的情况下可以保证不同的变量使用相同的地址值
+（认为共享 比提取连接带来更多的效率） （这回引起一个building Sting的bug）
+if (greeting.compareTo("Hello") == 0)  傻子方案
+先判断null 再用equel是比较是否”“
+大部分utf-8 就够了 但是补充的就需要是用utf-16 （扩展字符是2个字节单元（1个字节单元就是char））
+codePointCount 获取字节点
+
+String 并不一定有code unit 序列 组成 java9中使用单个 byte 数组来实现
+
+不存在的索引Sting匹配返回-1
+String实现了 CharSequence 接口 String是一个final 类
+
+好久没有翻过java api 了
+
+对字符的操作用Stringbuffer替代了String
+入门的Scanner交互 （简单的输入流和输出流）
+Console 不要ongoing有为null的风险。
+字符串的格式化包括，基本类型，分隔符，时间
+
+WINDOSW 文本坑人有bom 换行符也不同
+
+控制语句 
+没有使用的dowhile语句
+循环非为两种不确定的条件循环，确定的条件循环
+流程画到线上新的流程
+
+不要用浮点数总之循环，因为二进制数和十进制不能直接转换，会有精度损失。
+那么没有损失的计算是怎么算的呢
+break 和 continue 也被抛弃了我都在看些什么 （我懂我的加速   ）
+
+bignumber 的使用
+BigInteger.valueOf(12)
+java 怨言不能overload += 这类的运算符
+< 和 <= 取值的区别 <= 比< 多一个取值
+
+for 是while的加强， for each 是for 的加强
+for each 只要实iterable 接口就可以了
+
+注意不要使用多个引用指向同一个地址值，并进行值得操作
+
+java 的起订参数用空格区分
+快速排序算法
+随机抽取，随机抽取吧最后一个放到抽取的位置，缩短总长度，去重
+多列数组int[][] 形式 java中的没有多为数组是一个数组包含多个数组的引用
+
+使用多维数组我们可以构建各种* 排列方式乘法表 多维数组内的子数组长度是不固定的 List3.9
+
+oop
+算法 + 数据结构 = 编程 oop 是先数据结构在编程
+object 三个标识 state 、 behavior 、identity （区别相同的state的behavior）
+
+类的依赖关系 use-a has-a is-a
+有的語言时间十一种内置属性
+对象 和对象变量之间的区别 

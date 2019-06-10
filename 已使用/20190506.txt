@@ -1,0 +1,743 @@
+char06
+    inner class（内部类）
+        基本概念
+            定义在其他类内部的类
+            这样做的原因{
+                1、可以对同包下的类隐藏
+                2、可以使用所在类的private属性
+            }
+            过去用来简明的实现回调（匿名内部类），现在只能构建构建自己的代码嗯
+        使用内部类获取对象属性
+            内部类实例创建后会关联外部类实例，从而适用外部类的属性；相当于有个outer属性
+            outer class 的关联是在构造式实现的，是编译器帮你生成的 （空参变有参）
+            public TimePrinter(TalkingClock clock) // automatically generated co
+            {
+                    outer = clock;
+            }
+            但是内部类访问私有属性时不需要通过公共方法，能够直接访问
+            OuterClass.this 是调用外部属性的表达式（不该是共用一个this吗）
+            内部类可以被声明为private 内能由外部类创建
+        内部类的特殊形式
+            新建内部类的语法
+            outerObject.new InnerClass(construction parameters)
+            ex：    ActionListener listener = this.new TimePrinter();
+            内部类中的field 都是 final 修饰的，但是不能有static method
+         内部类还有使用必要吗   
+            内部类是有编译器解析成普通类使用$分开外部类名和内部类名  TalkingClock$TimePrinter.class
+            javap -private innerClass.TalkingClock$TimePrinter 可以看内部类信息
+            是用普通类实现内部类最大的区别是没有access to private 需要通过default访问器
+            访问时在外部类中生成一个访问方法，内部类调用时会由编译器解析调用该方法
+            同包的类可以也调用这个访问器来访问属性
+            内部类编译后有两个构造器（因为编译后没有private 类）一个私有构造
+            TalkingClock$TimePrinter(TalkingClock,TalkingClock$1); 调用第一个私有构造
+            编译器调用时这样调用构造的
+            new TalkingClock$TimePrinter(this, null) 这样做就不能直接通过 new TalkingClock$TimePrinter(this)调用
+            好杂种的感觉
+        local inner Classes（局部内部类）
+            直接在方法代码块中声明，本地内部类的作用域只用方法块中，所以出了代码块无法访问
+            本地内部类除了访问feild， 还能访问本地变量不过是final修饰的。（普通智能访问feild）
+            可以调用本地变量的原因 
+            控制流细节{ （都用一个方法名有毒）
+                1. The start method is called.
+                2. The object variable listener is initialized by a call to the constructor
+                of the inner class TimePrinter.
+                3. The listener reference is passed to the Timer constructor, the timer
+                is started, and the start method exits. At this point, the beep
+                parameter variable of the start method no longer exists. // Timer调用start 方法是beep 是没有传入的
+                4. A second later, the actionPerformed method executes if
+                (beep) . . .
+            }
+            匿名内部类在编译时会将局部变量 作为instance feild 放入构造器，用final修饰，不过方法中在内部类后定义一个局部
+            变量会怎么样呢
+            只有被内部类使用的局部变量才会被编译器放入内部类的class 文件中
+            改属性在构造式被初始化
+        匿名内部类
+            诡异的语法
+            和lambda方法实现多个方法（lambda只有一个）
+            new SuperType(construction parameters)  // superType 可以是类，被匿名类进行继承
+            {
+                inner class methods and data
+            }
+            匿名的内部类语法上没有构造函数，构造参数给superType 即使是一个接口
+            匿名内部类和普通类构造的区别{
+                new construction() 后有{} 为匿名内部类
+            }
+            invite(new ArrayList<String>() {{ add("Harry");add("Tony"); }});
+            可以使用匿名内部类的静态代码块进行初始化 ，都是什么鬼玩意
+            List.of("Harry", "Tony") 哟还有这个 方法啊
+            使用匿名内部类是继承，在使用equals 方法时候会出问题
+            特殊用法{
+                new Object(){}.getClass().getEnclosingClass() 获取static方法快的类名（没啥用啊）
+            }
+        静态内部类
+            讲一个隐藏到一个类，但不想用这个类的引用
+            该类里面方法默认 public static ，可以在构造是赋值，提供静态方法访问多个值，适用于返回多个值，但有不同的作用。
+            感觉有点意思有没有意思，结果不想有数组和集合接受的时候，可以增加可读性，但是不想这样。
+    service loaders
+        osgi（这种复杂的不看了，主要现在流行分布式）
+        ServiceLoader class 用于加载符合某个接口的某种服务（该接口或者父类具有多种实现）。
+        用法 {
+            需要在META-INF/services 对应接口全类名的文件，里面有实现类的名称（全类名）
+            public static ServiceLoader<Cipher> cipherLoader = ServiceLoader.load(Cipher.class);
+            返回的该接口实现类实例迭代器，可以loop 获取需要的实例
+            可以转换为stream流用filter过滤获取所需要的实现类 （9 添加的方法）
+        }
+    proxies （代理会讲些什么呢）
+        代理用于编译时你不知道哪些接口你需要实现的情况下（如回调）；
+        什么时候使用代理
+            代理是在运行时动态的生成代理，来解决编写是不知道接口的具体实现方式。（使用代理类处理接口是因为接口
+            无法直接获取实例）
+            使用代理的条件{
+                1、All methods required by the specified interfaces （所有的方法被特殊的接口需要）
+                2、All methods defined in the Object class （所有的方法定义在Object 类中）
+            }
+            使用方式{
+                实现InvocationHandler接口获取an invocation handler 实现其中的
+                Object invoke(Object proxy, Method method, Object[] args) 方法
+                低啊用代理类的proxy 方法时，invocation handler 必须指定如何处理调用（选合适呃处理类）
+            }
+        创建代理类
+            使用Proxy.newProxyInstance 来获取代理实例
+            创建代理类所需的参数{
+                1、 a class Loader 类加载器
+                2、 an Array of Class Objects 需要被实现的一个或者多个接口
+                3、 an invocation handler
+            }
+            代理的目的（例子）{
+                1、路由调用远程服务的方法
+                2、Associating user interface events with actions in a running program
+                3、Tracing method calls for debugging purposes 追踪方法调用
+            }
+            穿件一个代理实例以后，方法名和参数都会被传递到代理类中
+            代理实例是运行时动态生成
+            获取代理后虽然也会实现相同方法，但是调用原接口方法会进入 代理类的invoke 方法
+            在调用原方法的method.invoke 前后可以进行操作
+            ex：一个示踪代理 Integer 实现了Comparable接口，想追踪，Arrays.binarySearch(Objects[],key) 中调用compareTo方法
+            可以将Integer[] 替换成代理数组。
+            参考代码
+            所以注意获取代理类的三个参数 类加载器 、 代理的接口 、invocation handler (invoke取代方法进行运行)
+        代理类中的属性
+            虽然代理类是在运行中创建的，但是创建好后和普通类是一样的 （上面那个追踪compareTo 感觉非常浪费内存）
+            所有的代理均继承Proxy 类，代理类中只有一个instance feild 是invocation handler （打脸，代理类中只有一个属性）
+            因此所以需要使用的护具懂需要放入 invocation handler 中 
+            （代理类是运行中生成的，不是人工维护的是jvm 搞定的）
+            代理类中的toString, equals, and hashCode 被重写为调用invocation handler中的方法。
+
+            代理类的名称是不确定的，根据运行环境确定。
+            对于一个明确的classLoader 和有序的接口集合，只会产生一个代理类 ，和invocation handler 无关，比想象的还省点
+            不同的invocation handler 只会产生不同的实例，可以使用 getProxyClass来获取代理类类型
+
+            所有的代理类因为实现接口的原因，全是public 而且是final 修饰，这些代理类非凡在一个特殊的package 在一起
+            可以是用isProxyClass 判断是否是代理类
+
+            代理类运行的方法{
+                constructs a new instance of the proxy class that implements the given
+                interfaces. All methods call the invoke method of the given handler
+                object.
+            }
+    竟然没有总结。
+char07
+    Exceptions, Assertions, and Logging
+    处理异常的最低标准{
+        Notify the user of an error;
+        Save all work; and
+        Allow users to gracefully exit the program.
+    }
+    dealing errors
+        处理error 的两种方法{
+                Return to a safe state and enable the user to execute other commands;
+                Allow the user to save all work and terminate the program gracefully
+            }
+            将错误从error 发生的地方转移给一个 error handler 来处理这种情况。
+
+            需要考虑的错误场景{
+                1、 用户输入错误，必然发生的异常。（需要进行校验）
+                2、 硬件错误
+                3、 物理限制
+                4、 代码错误
+            }
+            返回特定的返回来标识错误有诸多局限，所以java用Exception 来停止方法的运行，
+            交给异常处理机制使用适当的handler 来进行处理
+        Exceptions 的分类
+            所有的异常对象都是throwable的实例
+            error反应java运行环境中本质错误和资源枯竭
+            Exception 分为RuntimeException 和 IOException
+            属于RuntimeException{
+                A bad cast
+                An out-of-bounds array access
+                A null pointer access
+            }
+            不属于的{
+                Trying to read past the end of a file
+                Trying to open a file that doesn’t exist
+                Trying to find a Class object for a string that does not denote an
+                existing class
+            }
+            If it is a RuntimeException, it was your fault（使用原则）
+
+            checked 和 unchecked Exception （complier 会建厂所有的checked异常）
+            {
+                除了Error 和 RuntimeException 是 unchecked Exception 其他的都是checkedException
+            }
+        异常的声明
+            java将无法解决的问题通过throw Exception返回给调用者。例如IOException。
+            定义构造和方法是都可以通过throw Exception 来抛出异常。
+            异常抛出后运行系统会寻找an Exception handler 来处理抛出的异常
+            对于checked Exception 要么处理要么告知调用者。
+            Error错误都可能抛出，无法收到从程序员控制。
+            注意： 子类方法抛出的异常类型不能超过父类方法的异常类型，可以抛出更具体的异常或者不抛出，
+            子类不能抛出父类不存在的异常。（为了多态）
+            当一个异常被声明时，其子类可以抛出该异常的任何子类
+
+            java的throws 编译时校验的，没有throws说明符的方法无法抛出任何checked Exception
+        如何抛出异常
+            三步（一般就是丢个错误信息）{
+                1. Find an appropriate exception class.
+                2. Make an object of that class.
+                3. Throw it
+            }
+            一个方法抛出一个异常，将不会返回给调用者，所以不需要返回默认值或者错误码
+        创建异常类
+            直接继承Exception或器子类就好了
+    捕获异常
+        抛出后就地解决，捕获异常需要一定计划性
+        如何捕获
+            异常不捕获的化会直接导致程序的崩溃，并给出异常追踪链
+            最简单的语法
+            try
+            {
+                code
+            }
+            catch (ExceptionType e)
+            {
+                handler for this type
+            }
+            运行方式 try中代码发生异常时，没有发生则不运行catch{
+                1、跳过try中的剩余代码
+                2、运行catch中的处理方法
+            }
+            如果遇到超过catch限定的异常类型，也会直接报出错误
+            抛出异常和catch异常的选择{
+                捕获所有自己知道怎么解决的异常
+                抛出所有自己不知道怎么解决的异常。
+                将异常传递个足以解决的handler中，而不是中途消除它。
+            }
+        处理多类型的异常
+            抓取多种异常，对不同的异常进行不同的处理方式
+            ex：try
+                {
+                    code that might throw exceptions
+                }catch (FileNotFoundException e)
+                {
+                    emergency action for missing files
+                }catch (UnknownHostException e)
+                {
+                    emergency action for unknown hosts
+                }
+            抓取顺序由小到大
+            在进行我中类型的异常抓取的时候，e是隐藏final的，过程中无法对e重新分配值
+            使用多类型异常捕获会生成一个代码块共用the shared catch clause 假装提高效率
+        重新抛出和连接异常
+            重新抛出，对异常重新包装，展示调用者所需的异常信息
+            ex：
+            try
+                {
+                    access the database
+                }catch (SQLException e)
+                {
+                    throw new ServletException("database error: " + e.getMessage());
+                }
+
+            还可以对新抛出的异常进行初始化e.initCause(original); 保存原异常信息通过getCause()来获取引发原因
+            这种异常封装在丢出高级异常的同时不会损失异常细节
+            当遇到不可抛出的checked Exception 可以封装成RuntimeExcetption (骚操作)
+            java7 有bug这种重新抛出的异常被认为可能是任何异常。
+        the finally clause 
+            用于清理该方法占用的本地资源。 防止你在try中写一遍，catch中写一遍。
+            finally 中的典卖无论如何都会执行
+
+            InputStream in = . . .;
+            try
+            {
+                try
+                {
+                    code that might throw exceptions
+                }finally
+                {
+                    in.close();
+                }
+            }catch (IOException e)
+            {
+                show error message
+            }
+            在外层进行catch 不仅能够处理异常，还能包含finally 中的异常信息（鬼才写法）
+            注意 finally 中不要写return finally 会在方法实际return前调用，finally中的return会替代方法中的return
+            finally中的语句值用于清理资源，不要有改变控制流的语句(return, throw,break, continue)
+        The try-with-Resources Statement（使用资源的try方法处理）
+            用于替换try{}finally 的功能AutoCloseable 接口用于关闭资源
+            语法：
+            try (Resource res = . . .)
+            {
+                work with res
+            }
+            可以自动关闭资源
+            java 9 中在外部声明资源传入try（res）  中
+            但关闭遇到异常时，该写法会把rethrown 并通过addSuppressed 添加到原异常中
+            注意：A try-with-resources statement can itself have catch clauses and even a finally clause. These are executed after closing the resources.
+        分析栈示踪元素
+            A stack trace is a listing of all pending method calls at a particular point in the execution of a program.
+            是所有运行时调用的方法锁调用的所有相关方法的集合
+            使用Throwable.printStackTrace() 来打印这个列表
+            更详细的信息{
+                该类java9 才有  这个类
+                StackWalker walker = StackWalker.getInstance();
+                walker.forEach(frame -> analyze frame)
+
+                获取出来的是StackWalker.StackFrame 对象
+                walker.walk(stream -> process stream) 包含详细信息
+            }
+    异常的使用建议
+        {
+            1、异常处理不应当被用于替代一个简单的测试（使用try catch 会比简单判断消耗跟多的性能，只在预期之外的地方使用异常）
+            2、不要微观管理异常，将需要处理的一整个task放入 try block中，将普通处理和异常处理分开。
+            3、利用好异常的继承体系。{
+                寻找适当的异常抛出，选取runtimeException的子类或者自建类
+                对异常catch 要细化处理
+                checked Exception过于繁重不应该用它抛出逻辑错误，反射的lib 就这么干了，抛出不会发生的异常
+                将一种异常转换Wie另一种异常李玉顶层调用理解
+            }
+            4、不要消除异常 不想抛出异常的时候，在消除需要谨慎，并采取适当的方式来处理
+            5、当察觉到有异常出现的情况，需要进行相应的处理，而不是不做处理。{
+                选取是抛出异常，还是异常返回一个特定值。如果不加异常，需要加上相应的判断
+                但是过多的判断也很麻烦呃。
+            }
+            6、传播的异常不应当是一个虚假的标识{ （我还是不太希望进行传播） 不该都是运行异常吗
+                比起消除异常，可以吧异常报个顶级调用者处理。
+                嗯我还是转成runtimeException 子类，不想传播啊
+            }
+        }
+    使用Assertions（断言）
+        断言用于防错误程序编程
+        断言概念
+            在确定所使用的值都满足的情况下只是测试需要考虑。
+            因此断言允许你测试的时候进行检查，在生产是自动移除
+            java中单元的语法（关键词 assert）{
+                不满足条件报错（差点理解反了）
+                assert condition; （运行出错返回一个AssertionError）
+                assert condition : expression; （返回AssertionError的同时可以添加错误信息）
+            }
+            AssertionError 是不保存错误信息的都在expression中，java鼓励解决断言的错误，断言用来调试错误
+            ex： assert x >= 0 : x;
+        断言的启用和关闭
+            断言默认是关闭的
+            需要使用java -enableassertions 或者-ea 命令调用（不需要重新编译旧可以使用）
+            classLoader 在断言未开启时去除断言代码，不影响性能
+            还可以指定某个文件或者文件夹开启断言
+            java -ea:MyClass -ea:com.mycompany.mylib MyApp
+            可以是使用 -da 关闭特别累的断言
+
+            冷知识{
+                有些类不使用类加载器可以是用 -ea -da 调控
+                对于system classes 需要使用enablesystemassertions/ -esa 来开启断言
+                还可以通过classLoader 来控制断言的开关
+            }
+        使用断言进行参数校验
+            java中处理异常的三种方式
+            {
+                Throwing an exception
+                Logging
+                Using assertions
+            }
+            选择断言的原因{
+                1、断言意味着致命、不可恢复的错误（需要修复）
+                2、断言只在开发和测试的时候进行检查
+            }
+            断言值应该程序本质错误在测试的时候
+            值有在参数明确限定其范围的时候加断言进行测试
+            读参数的断言叫做 precondtion 使用断言方法的调用会变的不可预期
+        使用断言记入假设
+            使用断言代替主食来记录假设 用断言写注释 啊
+            断言战术工具， 日志战略攻略工具（基本都用日志了）
+    Logging(日志)
+        使用日志的好处（随便说说）{
+            1、可以轻松的过滤所有的日志，或者指定级别下的日志，也可以轻松是它们重新显示。
+            2、过滤日志非常容易，所以将日志代码留在代码中只会花费一个极小代价
+            3、日志记录可以只此昂不同的handler用于不同的展示形式。
+            4、logger 和handler 可以过滤文件，可以使用任何的自定义标准过滤一部分日志内容
+            5、日志记录可以格式化为不同格式的文件，如text、xml等。
+            6、软件可以使用多种loggers 使用包名作为分隔
+            7、日志配置可以被配置文件控制。
+        }
+        学默认的日志系统，和log4j是可以无缝切换的，真的是jdk使用者。
+        java9 中有封开的轻量日志系统来调用不同的日志系统。
+        基本日志记录
+            使用全局日志
+            Logger.getGlobal().info() （会输出固定的日志格式）
+            Logger.getGlobal().setLevel(Level.OFF); 在main方法使用所有的日志都会被禁用
+        稍微先进点的日志
+            不使用一个全局变量打印日志，需要定义自定义logger来打印日志
+            private static final Logger myLogger = Logger.getLogger("com.mycompany.myapp")
+            logger 不应该被gc回收所以使用 static显示
+            logger 和包名一样是继承的，且logger parents 和 children 是共用属性的，所以对父类的日志级别会影响子类
+            java默认有七种默认级别{
+                SEVERE
+                WARNING
+                INFO
+                CONFIG
+                FINE
+                FINER
+                FINEST  （默认是打印前3总日志，咋和我常见的级别不一致呢）
+            }
+            logger.setLevel(Level.FINE) Level.ALL Level.OFF 来控制logger 输出级别
+            当你改变了 logging level ，也需要改变日志handler处理的日志级别（默认也是info）
+
+            如果虚拟机优化了运行可以使用void logp(Level l, String className, String methodName,String message)获取精确的位置。
+            对某各类中某个方法进行示踪的api{ （打印的是示踪格式的文本，打印的就是传入的参数）
+                void entering(String className, String methodName)
+                void entering(String className, String methodName, Object param)
+                void entering(String className, String methodName, Object[] params)
+                void exiting(String className, String methodName)
+                void exiting(String className, String methodName, Object re
+            } （These calls generate log records of level FINER that start with the strings ENTRY and RETURN.）
+            两种打印异常的方法
+                {
+                    void throwing(String className, String methodName,Throwable t) （不需要try catch）
+                    try catch 在catch中打印 （有点意思）
+                }
+        改变日志管理配置
+            默认配置地址{
+                conf/logging.properties
+                jre/lib/logging.properties java9
+                java -Djava.util.logging.config.file=configFile MainClass (自定义配置位置)
+            }
+            具体配置内容{
+                日志名+.level=[level]
+            }
+            java 日志管理是在main方法之前初始化（很有道理）{
+                在方法中初始化需要
+                System.setProperty("java.util.logging.config.file", file)
+                LogManager.getLogManager().readConfiguration()；（刷新）
+                java9 可以LogManager.getLogManager().updateConfiguration(mapper)
+            }
+            java9 中修改配置的方式{
+                mapper 是一个Function<String,BiFunction<String,String,String>>. 这泛型有方法参数和返回值
+                使用结合schema来管理旧配置和新配置
+                key -> ((oldValue, newValue) -> newValue == null ?oldValue : newValue)
+                上面那个是什么函数
+            }
+            运行中日志修改{
+                使用jconsole在运行中改变日志级别
+                参考www.oracle.com/technetwork/articles/java/jconsole-1564139.html#LoggingControl
+                我都在学习什么鬼东西
+            }
+        日志本地化
+            （根据不同的地域进行日志的保存，我为啥要看这个）
+            不同的资源绑定被防止在不同的文件中
+            可以通过绑定名字、占位打出不同地域的日志格式
+            java9 可以绑定对象而不是名字（一个个属性）
+        日志handlers
+            默认的handler{
+                默认的logger 发到 父handler （with name ""） 然后调用ConsoleHandler
+                将内容放到System.err的stream中。
+            }
+            handler 也有级别设置{
+                java.util.logging.ConsoleHandler.level=INFO 可以设置
+            }
+            代码中自定handler{
+                var handler = new ConsoleHandler();
+                handler.setLevel(Level.FINE);
+                logger.addHandler(handler);
+            }
+            默认的日志会发送个自己的handler 和父类的handler 为了不打印两边{
+                logger.setUseParentHandlers(false);可以这样干
+            }
+            将logging发送到不同的handler{
+                java提供了两有用的（早点看会好很多啊）
+                FileHandleer {
+                    默认javan.log 发入用户所在文件夹 （默认格式是xml呃 ，可以之定义呃）
+                    有很多属性可以使用，命名、大小，新建删除规则
+                }
+                Sockethandler (将record 发给特别的host port)
+            }
+            自定义handler{
+                通过继承Handler 或者StreamHandler 可以实现自定义handler
+                自定义一个将record 展示在窗口的继承 streamHandler 使用swing
+                参考代码 㤇重新定义 publish flush close 方法
+            }
+            
+        过滤器（filters）
+            默认情况下根据日志级别进行过滤，也可以填加可选过滤器进行额外过滤
+            自定义handler{
+                1、实现Filter 接口
+                2、实现boolean isLoggable(LogRecord record) 方法
+                3、使用时每次最多只可以有一个filter
+            }
+        格式化（Formatters）
+            用于是用自定义的格式进行日志输出
+            只要实现Formatter class 重写format 方法
+            常用方法{
+                调用formatMessage 可以进行部分本地化工作
+                String getHead(Handler h) 这两是格式头也可以重写
+                String getTail(Handler h)
+                setFormatter 将Formatter 设置如Loggeer中
+            }
+        是用日志的建议
+            为了不让你在上面选项中迷失自我（原画就是这样呃）{
+                1、对于简单的项目，使用一个和main方法所在package相同的Logger就可以了，可以写成静态
+                在任何地方调用。
+                2、想教育改变日志的默认配置（比较involved），因该案在main方法中安装一个更合理的logger
+                在金宠中替代原来的{
+                    提点默认的 ，需要判断默认有没有值（不要用看看就好）
+                    Logger.getLogger("").setLevel(Level.ALL);
+                    final int LOG_ROTATION_COUNT = 10;
+                    var handler = new FileHandler("%h/myapp.log", 0, LOG_ROTAT
+                    Logger.getLogger("").addHandler(handler);
+                    }
+                }
+                3、当准备log关键文本的时候，把这些日志设为INFO, WARNING, and SEVERE呈现给用户，
+                用finelai 打印需要给编程人员看的日志，别用sout了全用日志了，反正默认也打控制台。
+            }
+    debugging tips(挑错建议)
+        嗯，如果写的程序不报错就别看了
+        卧槽使用工具的debugger就可以 
+        使用debug前的建议{
+            1、可以打印出需要调试变量值，一般都有toString（）方法
+            2、使用分离的main方法，进行隔离的单元测试，用于测试类中的方法（实际编程只能用在一部分地方）
+            3、相比直接debug 可以使用main junit 测试方法直接运行，并答应出相关变量（切得比较的小）
+            4、代理日志类，用匿名类来代替原类调用原方法的同时打印日志，和Proxy.newProxyInstance 不同，是可以对类继承的（匿名内部类）
+            可以用于追踪方法调用，具有更大的适用性，比之前的Proxy.newProxyInstance的代理。这种代理类是编译的时候就生成的。
+            5、可以获取stack trace 特别是异常都是会包含该信息，也可以Thread.dumpStack() 获取
+            6、stack trace 正常是输出到System.err 中，所以需要制定相应的输出流、
+            7、将System.out 和System.err的内容输出到一个文件中{
+                java MyProgram 1> errors.txt 2>&1 总有中熟悉的感觉 
+            }
+            8、将unchecked de 方法输出到System.err 对终端用户不友好，所以可以将这些异常放到单独的文件（有毒吧）
+            9、可以使用 java -verbose 查看java虚拟机的类加载，用于诊断类路径问题。
+            10、javac -Xlint sourceFiles可以知道编译准确的代码问题{
+                javac -Xlint:all,-fallthrough,-serial sourceFiles 可以关闭部分代码报错
+            }
+            11、jvm为java程序提供监控和管理{
+                允许安装jvm的代理获取 track memory consumption, thread usage, class loading, and so on 的信息。
+                jconsole 就是官方提供的统计窗口，可以看jvm上运行的程序
+                可以看www.oracle.com/technetwork/articles/java/jconsole-1564139.html 获取更多的信息（挺好看的）
+            }
+            12、Java Mission Control 是Oracle提供的一个监控器https://docs.oracle.com/javacomponents/index.html
+            开发可以免费使用
+        }
+char08  Generic Programming(泛型编程)
+    引言：Generic classes and methods have type parameters（确定实例化后是准确的类型）
+        为其他使用者提供不会造成困惑的类和方法，通过限定类型。
+        由于向前兼容的问题，java的泛型还是存在一定的限制的，但是还是非常的实用的。
+    使用泛型编程的原因
+        基本：泛型编程意味着所写的代码可以被不同类型的objects进行复用
+        类型参数（type Parameters）的好处
+            ex ArrayList 没有类型参数是持有Object 类型的，获取需要强转，插入没有类型校验
+            使用type parameter 会标明集合锁持有的参数，编译器就可以检验插入的参数类型和直接获无需强转
+            {
+                是程序变的readable 和safer
+            }
+        使用泛型的情况
+            需要预期使用类的潜在未来（要不要提供泛型支持）
+            问题举例{
+                ArrayList.addAll(); 子集合和父集合 子集合不能添加父集合，父集合可以
+                为了解决上述问题 发明了he wildcard type（通配符类型）然你写起方法更加灵活（有毒）
+            }
+            使用泛型的三个程度{
+                1、只是简单使用泛型类
+                2、因为没有type Parameter造成的困难，让你自己开始写相关的方法
+                3、大部分被写jdk的写掉了（我们只要写一些接受一般类型的方法）
+            }
+                嗯，看看就行，理解下运行机制，进行一下查错完美。
+    定义简单的泛型类
+        语法：public class Pair<T, U> { . . . }
+        该类型可以在整个类中被使用 一般用T ,U ,S 标识泛型 集合是E K V
+        In other words, the generic class acts as a factory for ordinary classes.（有点意思） 
+    泛型方法
+        除了直接 个类定义泛型，也可以定义方法
+        ex：
+        class ArrayAlg
+        {
+            public static <T> T getMiddle(T... a){}
+        }
+        泛型方法在调用的时候不需要传入类型参数，类型由传入的参数确定
+    类型变量的作用域
+        确保泛型的的实例都具有某个方法，一般是去报继承或者实现接口。
+        ex： 比较的通用方法需要确保类实现compareable
+        public static <T extends Comparable> T min(T[] a) . . . 
+        可以这样限定泛型的类型范围
+        如何使用有comparable 接口的类型参数{
+            <T extends BoundingType> 语法抱枕T是BoundingType 的subtype ,这两类型都可以是接口
+            T extends Comparable & Serializable 多个通配符用 & 连接
+            泛型限定范围可以有多个接口或者类，在一个限定集合中，推荐用对象为第一优先（不过一般都是接口）
+            // localDate 里面的comparTo方法重写的和我预期的不太相同
+        }
+    泛型代码和虚拟机的关系
+        虚拟机中的类没有任何泛型，泛型的类变以后可能可以在1.0 版本的虚拟机上运行，编译器会处理泛型问题。
+        类型消除
+             没有限制，T被Object替代 有限制，T extends 接口&类 会转换成第一个限制，并在适当的时候
+             进行类型的转换
+             javap -p 看到的还是泛型呃。
+             擦除会使不同泛型的类吧共用初始类型的类{
+                Pair<T>  Pair<String> or Pair<LocalDate>  T -> Object
+                Pair<T extends Comparable>  T - >Comparable
+                为了效率应该吧标记接口这种限制条件放后面，防止多次强转
+             }
+        翻译泛型表达式
+            调用泛型反法式会编译器会自动帮你类型转换{
+                1、调用原方法，返回擦除替换的类型
+                2、进性相应的强转
+            }
+            如果类中类型是public直接调用也会自动进行cast（当然不该遇到）
+        翻译泛型方法
+            public static <T extends Comparable> T min(T[] a) —>
+            public static Comparable min(Comparable[] a)  和累的擦除是一样的
+            当继承一个泛型类的时候，由于原类中泛型被擦除，所以添加一个擦出了泛型的犯法，同时需要保存子类使用泛型的
+            方法（没有擦除泛型）
+            ex：class DateInterval extends Pair<LocalDate> // after erasure
+                {
+                public void setSecond(LocalDate second) { . . . }
+                . . .
+                }
+            setSecond 父类继承的，但是擦除后 会变成class DateInterval extends Pair
+            所多态调用该擦除方法（public void setSecond(Object second)），需要桥方法
+            继承的擦除方法的运行{
+                子类中加入的方法被叫做桥方法 由桥方法调用public void setSecond(LocalDate second)
+            }
+
+            如果重写getSecond方法{
+                會有兩個方法签名相同的方法
+                LocalDate getSecond() // defined in DateInterval
+                Object getSecond() // overrides the method defined in Pair
+                只是编译器通过字节码区别的可以是jvm识别，但是你不能这样写
+            }
+            桥函数处理在泛型用到，在重写方法限定返回类型比父类小的时候也用到了，如
+            Cloneable 标记的类返回的是Object ，但是可以直接写成对应类型，中间就用了桥函数{
+                Employee clone() // defined above
+                Object clone()
+            }
+            需要记住的要点{
+                1、虚拟中没有泛型，只有普通的类和方法
+                2、所有的翻新都会被器对应的限制类型替换
+                3、桥方法被合成，用于实现多态。
+                4、Casts are inserted as necessary to preserve type safety
+            }
+        调用使用泛型之前的代码
+            泛型的一个设计主要目的实现泛型代码和原有代码的互相操作
+            旧代码使用泛型和返回泛型都会有warning警告，无法确定类型（例如set 和get）
+            这也就抛个类型转换错误，反正以前也有，基本不会出现。（大部人写代码连这些功能都没有听过）
+            @SuppressWarnings("unchecked") 关闭对应的编译器警告
+    限制和局限（Restrictions and Limitations）
+        大部分限制是因为擦除机制的原因
+        {
+            1、基本类型不能做为类型参数（擦除后会变成对象类型）
+            2、运行时类型本质是原始类型（虚拟机中的运行没有泛型只能使用原始类型） 
+            所以不能使用泛型来判断具体类型。因此使用getClass() 返回的是原始类型{
+                Pair<String> stringPair = . . .;
+                Pair<Employee> employeePair = . . .;
+                if (stringPair.getClass() == employeePair.getClass()) //
+                they are equal
+            }
+            3、不能够创建使用类型参数的数组，可以用不同蕾西进行初始化，因为数组的初始化和擦除自己是冲突的
+            数组创建不能使用擦除的原始类型进行初始化。 {
+                var table = (Pair<String>[]) new Pair<?>[10]; 可以是用通配符初始化但是会存在类型转换错误
+                所以相比用数组，可以是用数组集合进行初始化ArrayList: ArrayList<Pair<String>>
+            }
+            4、可变参数警告，本质是个数组，虽然上面不能实例化，这里只会抛出警告。但还是要注意编译器是否会报出类型
+            转换错误，
+            5、不能实例化类型参数 new T() 是不被允许的，因为擦除会变成限制，泛型实例获取示例{
+                public static <T> Pair<T> makePair(Supplier<T> constr)
+                {
+                return new Pair<>(constr.get(), constr.get());
+                }
+                Pair<String> p = Pair.makePair(String::new); // 获取对应类型的泛型实例。 T不能实例化
+                可以通过java8 的构造相关获取实例 之前需要传入class 对象调用newInstance() 方法。
+            }
+            6、不能使用泛型构造通用数组（数组创建时会限定类型每次保存时都会去确定类型），擦除级值后获得的数组和实际
+            需要的是不一样的类型。{
+                ex：
+                public static <T extends Comparable> T[] minmax(T... a)
+                {
+                var result = new Comparable[2]; // array of erased type
+                . . .
+                return (T[]) result; // compiles with warning
+                }
+                / 这里Comparable 数组不能转换成 其子类数组，会产生类型转换错误
+                ArrayList 可已这样转换不出错是因为擦除变成Object[] 但不返回E[] 不进行cast不报错
+                private E[] elements;
+                . . .
+                public ArrayList() { elements = (E[]) new Object[10]; }
+
+                想要获取可以返回的T[]实例的时候可以传入constructor expression ，或者使用反射
+                ArrayAlg.minmax(String[]::new, "Tom","Dick", "Harry"); 反射还少填参数   
+            }
+            7、static contexts 中使用类型变量是无效的，影卫泛型类会被擦除，所以不能调用相关方法，所以无效
+            8、不能抓取泛型的实例 Problem<T> extends Exception 不被允许 但是可以用来初始化异常格式
+            T t，  t.initCause() 可以用这个初始化异常。
+            9、将checked 异常伪装成unchecked 异常 欺骗骗编译器，让编译通过。 这个比较诡异 不是
+            T extends Throwable cachuhou 是Throwable 吗不需要抛出吗
+            10、小心擦除后引起的冲突{
+                比如equals() 方法会和泛型的冲突在才出后，需要重命名
+                子类和父类都实现Comparable<T> 会因为使用两个相同签名，不同类型桥方法产生冲突。
+                谁他妈这样写代码，我头有点痛。
+            }
+        }
+    泛型的继承规则
+        使用泛型的类不会因为泛型的关系，产生任何关系。
+        和数组的继承之转换相似，子类数组可以转换成父类数组，但不能放除了子类型外的元素。
+        泛型继承没有这个规则，为了防止错误，没有继承关系。
+
+        泛型可以转换为原始类型。这是为了兼容性，虽然失去了泛型的编译时检查。
+        泛型类可以向普通类一样继承使用。
+    通配符类型
+        是上面讲的泛型更好使用有了通配符（不是增加难度吗）
+        概念
+            使用通配符后类型参数会变成可变的，这个不能在类上使用
+            ex：Pair<? extends Employee>
+            在使用 Pair<Employee> 的时候不能够吧Mannger 作为参数传进去，因为没用通配符会类型错误
+            是用? extends Employee 就可以吧所有的子类都当做参数传入
+            使用? 不会产生吧父类设置到子类的情况，这两泛型之间没有关系{
+                访问器是可以使用
+                改变器不可以（不知道具体的需要的值） 编译器真的矫情存在安全隐患
+            }
+        通配符的父类限制
+            ? super Manager （只能使用Mannger 的父类）
+            使用这个可以用于设置值，不能获取值，不知道返回的什么，因为是父类所以可以接受任何
+            设置可以是因为让父类接受子类的多态性，不能get 是因为父类不转换为子类
+            super 接受的是父类相关， extends 接受的是子类ie相关
+            总的 通配符父类限制让你可以改变，不能访问，子类限制相反
+
+            可以使用public static <T extends Comparable<? super T>> T min(T[]a) 来解决多个类
+            实现相同接口的冲突 这里使用的父类的接口 减少调用的时候类型转换错误，因为传递的是父类
+        不受限制的通配符
+            可以调用访问器返回构造器，但是不能调用改造其（Object 都不可以）
+            在不需要具体类型的时候可以这样用，为了好读？
+            public static boolean hasNulls(Pair<?> p)
+            {
+            return p.getFirst() == null || p.getSecond() == null;
+            }
+        通配符的能力
+            当使用? 时，是不知道类型，可以写一个有T的方法让? 调用来处理需要具体类型的情况，? 可以
+            持有不同的泛型 ? 可以通过extends super 关联子类或者父类， 拥有变化性
+
+            T extends 值是添加锁使用泛型的限定范围
+    反射和泛型
+        泛型类的实例无法获取泛型相关的信息，都被擦除了，但是可以通过classes反射来获取相关信息
+        泛型类的Class
+            Class<T> 本身是个泛型类，不用进行强转了
+             String.class -> Class<String> 
+        使用Class<T> 作为参数可以匹配对应的类型
+            返回确定类型的实例，或者尽情强转
+            ex：public static <T> Pair<T> makePair(Class<T> c) throws InstantiationException,
+                IllegalAccessException
+                {
+                return new Pair<>(c.newInstance(), c.newInstance());
+                }
+        虚拟机中的泛型信息
+
+
+
+        
+
+
+
+

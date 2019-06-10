@@ -1,0 +1,172 @@
+    反射和泛型
+        泛型类的实例无法获取泛型相关的信息，都被擦除了，但是可以通过classes反射来获取相关信息
+        泛型类的Class
+            Class<T> 本身是个泛型类，不用进行强转了
+             String.class -> Class<String> 
+        使用Class<T> 作为参数可以匹配对应的类型
+            返回确定类型的实例，或者尽情强转
+            ex：public static <T> Pair<T> makePair(Class<T> c) throws InstantiationException,
+                IllegalAccessException
+                {
+                return new Pair<>(c.newInstance(), c.newInstance());
+                }
+        虚拟机中的泛型信息 
+            被擦除的泛型类任然保存部分原始类型的信息
+            可以通过反射api确定的信息{
+                1. 这个泛型是否有一个类型参数T
+                2. 这个类型参数是否有一个子类型限制,并且限制本身也是参数类型
+                3. 限制类型是否有通配符
+                4. 通配符有一个父类限制（super bound）
+                5. 泛型方法有一个泛型数组参数
+            }
+            你可以用这些重新构成泛型类，但是你不知道具体类型。
+            java使用Type接口来标识这些信息，这些子类包括{
+                1. Class， 描述具体的类型
+                2. TypeVariable 描述泛型值 如T extends Comparable<? super T>
+                3. WildcardType 描述通配符如 ? super T
+                4. ParameterizedType 描述泛型类或者接 如：Comparable<? super T>
+                5. GenericArrayType 描述泛型数组 T[]
+                jvm 会给除class 的接口生成相应的实例
+            }
+                // 使用这些信息大英想关的泛型信息，这代码根本就不想打啊
+            Type Literals
+                想要根据具体类型信息进行不同的方法操作
+                针对不同的类型进行不同的字符串格式化，解决方法{
+                    1. 新建一个类保存Type 信息，该类的空参够早需要特别处理，可以根据匿名内部类获取泛型具体信息(获取需要特别的api)
+                    2. 新建格式化类，其中是用map 保存类型信息和对应的处理方法，这里使用lambda表达式Function<T,R>
+                    3. 运行格式化时，获取field 的泛型类型或本身类型进行对应的格式化处理
+                    参考代码，用了很多通配符
+                    char08 中 GenericReflect （根数field的泛型属性 进行不同的操作，兼容不同的类） 还可以写嵌套，递归
+                }
+        总结，目前java泛型对我来水还是有点像一个魔法，是泛型类 ，泛型方法， 泛型限定 ，加上通配符 通配符限定 真的太魔鬼，
+        目前所要做的就是能够看懂就可以了，写一部分的通用工具类，涉及了非常多类型相关的问题。
+        更加详细的内容需要参考：http://angelikalanger.com/GenericsFAQ/JavaGenericsFAQ.html （我没看太长了）
+
+char09Collections
+    数据结构非常的重要，会影响代码的编码格式（逻辑可读性）和性能。这章是提供java集合架构使用。
+    java collections 架构
+        开始很小功能有限，在1.2的时候进行了重新设计，但是由于功能的需求和冲突，有很多特异性设计并造成一些争议。（看看）
+        分离的集合接口和实现
+            queue 接口{
+                先进先出
+                最简单的接口心事{
+                    public interface Queue<E> // a simplified form of the interface in t
+                    {
+                        void add(E element);
+                        E remove();
+                        int size();
+                    }
+                }
+                实现的两种方式，一种使用循环数组，一种是链表 自己想可能的实现代码（估计得写）
+            }
+            由于实现的同一接口多态，可以使用接口接受不同的具体实现，只在获取实例时使用具体类型。
+            需要根据不同的情形选择实现，数组的实现效率更高，但是容量受限。
+            在jdk 中提供类一些类的Abstract 来方便继承实现具体功能，其中有部分已经实现的功能。
+        the collection 接口
+            collection classes 的基础接口，包含两个主要方法{
+                boolean add(E element);
+                Iterator<E> iterator(); // 返回实现Iterator 接口的实例用于遍历集合
+            }
+            Iterators（迭代器）
+                是Collection中的一个属性，不是集合实现的接口
+                主要方法{
+                    public interface Iterator<E>
+                    {
+                        E next();
+                        boolean hasNext(); // 在next() 调用之前调用
+                        void remove(); // 可以移除当前掉过的元素，至少有个next() ,next() 一次次啊能够删除一次
+                        default void forEachRemaining(Consumer<? super E> action); // 用于lambda 表达式
+                    }
+                }
+                collection 接口继承了Iterator 接口
+                迭代使用的顺序和具体集合有关，是不能预测的。可以确定有没有读完但不能确定到底是什么顺序，有随机顺序的集合。
+                Enumeration 被Iterator 替代，因为甘油好的名字（我都在看些啥）
+                java中的迭代器和STL是不同的，STL模拟了数组可以用 index 来迭代，java没有模拟，只能使用next(){
+                    Instead, think of Java iterators as being between elements. When you call
+                    next, the iterator jumps over the next element, and it returns a reference to
+                    the element that it just passed (返回跳过的元素)
+                }
+            实用的泛型方法 
+                由于Collection 和Iterator 都是泛型接口，所以可以使用操作任何类型的集合
+                ex： contain 方法
+                Collection 提供了打不风常用功能，由AbstractCollection提供了打不风的通用功能，但是没有实现size和iterator
+                在使用default 后Collection 没有重写AbstractCollection 中实现的方法，只是添加了一些写stream 中用的方法
+    Collections架构接口总览
+        接口总览
+            集合框架拥有两个基本接口 Collection and Map
+            List 是有序集合 可以使用迭代器或者索引获取，索引读取是随机获取，因为没有固定的顺序{
+                void add(int index, E element 随机获取相关的方法
+                void remove(int index)          
+                E get(int index)
+                E set(int index, E element)
+            }
+            ListIterator shi Lterator 子类接口 {
+                void add(E element) 在迭代位置之前添加一个元素
+            }
+            java的集合设计对两种不同功能（查询，增删）的有序集合使用的同一个接口。特别是是LinkList的随机访问方法是不必要的{
+                可以使用 instanceof RandomAccess 来判断集合算法的实现方式（有屁用）
+            }
+            set 接口的方法和Collection一致，不过加了更多的定义描述，不能持有相同元素，不同顺序、持有相同元素的集合是相同呃，
+            持有相投元素的hashCode 是相同的 {
+                新建Set 的主要意义是让方法只接受set相关的集合
+            }
+            SortedSet and SortedMap接口 包含了用于排序的比较器还定义了可以获取views的方法
+            NavigableSet and NavigableMap （1.6）接口包含查询有序set和map的方法是多余的应该塞到上面的接口里面
+    Collection相关具体集合实现
+        linked lists
+            ArraylList使用array 实现的化，新增或者删除有与算法机制花费较高
+            LinkedList使用link data 是双重关联的{
+                使用链表删除其中一个元素只会影响该元素关联的两个元素
+            }
+            LinkedList中包含ListIterator 该迭代器添加了 add 方法迭代器位置前添加新的元素{
+               E previous() // 可以向前迭代
+               boolean hasPrevious()
+               迭代器位置是不变的情况使用add添加的，一次添加 a 、 b 后 顺序变为ab 不是（ba）迭代器顺序抱枕不变
+            }
+                迭代器中的remove 除了和迭代器的位置有关还和状态有关，只能上一次next() 删除左边的，previous删除右边的，刚刚只有的元素
+                迭代器中的修改方式{
+                    ListIterator<String> iter = list.listIterator();
+                    String oldValue = iter.next(); // returns first element
+                    iter.set(newValue); // sets first element to newValue // 修改迭代器返回的元素
+                }
+                在迭代器迭代的过程中，可能其他迭代器对集合发生修改后{
+                    迭代器需要察觉这种修改，并是当前迭代失效，
+                    java目前是ConcurrentModificationException
+                    List<String> list = . . .;
+                    ListIterator<String> iter1 = list.listIterator();
+                    ListIterator<String> iter2 = list.listIterator();
+                    iter1.next();
+                    iter1.remove();
+                    iter2.next(); // throws ConcurrentModificationException
+                }避免并发修改异常，可以建多个只读迭代器，或者一个既可以读也可以写的迭代器
+                检测方式是，Collection本身用个数记入每次的增删操作，迭代器本身也会有一个改变记录数，每次迭代前都会
+                比较这两个数是否相同。（涉及一些具体实现）
+                针对set的改变使用另一套侦测模式
+                不要使用其中的 random access method 方法（本质不支持索引）
+                java iterator 是计数的可以使用nextIndex 和previousIndex 来获取{
+                    可以使用list.listIterator(n) 范湖IDE迭代器替换list.get(n) 来获取更高的效率
+                }            
+            ArrayList{
+                提供迭代器和随机访问两种访问方式
+                是将元素雅俗放入一个动态分配的数组之中
+                线程不安全但是比Vector 效率高（一般都是单线程操作）
+            }
+            HashSets{
+                无需去重，可以提供更快的速度来查询某个特定的元素。（通过内置排序算法提高查询速度）
+                hash table 就是一种可以快速查询对象的数据结构，hashcode 的结果由对象的成员内容决定
+
+                hash table 储存数据结构的基本了解{
+                    java中使用 link list 数组来实现hash table
+                    每个linklist 是一个bucket 用于放元素，元素岔路那个桶由元素模以桶数获取的余数决定。
+                    但没有元素直接插入，否则需要比较该link list 中的元素来看是否已经存在。
+                    在桶数足够大的情况向下，这种比较会非常的少。（效率会非常的高）
+                    在java 中当link list 被装满时会同辉转换成二分树用于改善用于hash值相同带来的大量冲突性能
+                    为了改善性能需要需要设定适当的桶数，并在hash table 负载超过总容量一定指数的时候（如总量的0.75）
+                    java 默认的桶数是16，而且每次设定会被修正到2的倍数
+                    重新生成新的hash table （rehashed） 默认绣着系数是0.75，桶数会变为原来的两倍
+                }
+                hashset 使用了hashtable 来确保元素的唯一
+                hashSet 中的使用iterator 是迭代的hash 桶所以是无序的
+                java SetTest < alice30.txt 可以进行转换惊了
+            }
+            dfeefe 
