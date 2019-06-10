@@ -151,22 +151,199 @@ char09Collections
                 是将元素雅俗放入一个动态分配的数组之中
                 线程不安全但是比Vector 效率高（一般都是单线程操作）
             }
-            HashSets{
-                无需去重，可以提供更快的速度来查询某个特定的元素。（通过内置排序算法提高查询速度）
-                hash table 就是一种可以快速查询对象的数据结构，hashcode 的结果由对象的成员内容决定
+        HashSets{~
+            无需去重，可以提供更快的速度来查询某个特定的元素。（通过内置排序算法提高查询速度）
+            hash table 就是一种可以快速查询对象的数据结构，hashcode 的结果由对象的成员内容决定
 
-                hash table 储存数据结构的基本了解{
-                    java中使用 link list 数组来实现hash table
-                    每个linklist 是一个bucket 用于放元素，元素岔路那个桶由元素模以桶数获取的余数决定。
-                    但没有元素直接插入，否则需要比较该link list 中的元素来看是否已经存在。
-                    在桶数足够大的情况向下，这种比较会非常的少。（效率会非常的高）
-                    在java 中当link list 被装满时会同辉转换成二分树用于改善用于hash值相同带来的大量冲突性能
-                    为了改善性能需要需要设定适当的桶数，并在hash table 负载超过总容量一定指数的时候（如总量的0.75）
-                    java 默认的桶数是16，而且每次设定会被修正到2的倍数
-                    重新生成新的hash table （rehashed） 默认绣着系数是0.75，桶数会变为原来的两倍
+            hash table 储存数据结构的基本了解{
+                java中使用 link list 数组来实现hash table
+                每个linklist 是一个bucket 用于放元素，元素岔路那个桶由元素模以桶数获取的余数决定。
+                但没有元素直接插入，否则需要比较该link list 中的元素来看是否已经存在。
+                在桶数足够大的情况向下，这种比较会非常的少。（效率会非常的高）
+                在java 中当link list 被装满时会同辉转换成二分树用于改善用于hash值相同带来的大量冲突性能{
+                    这里使用的是红黑树的数据结构，一种平衡二叉树，需要满足4个基本特点平衡，会通过变色和旋转来是添加或者删除后的
+                    数重新回到平衡，该树平衡比较的快。
+                    具体可以参考：https://medium.com/basecs/painting-nodes-black-with-red-black-trees-60eacb2be9a5 
+                    讲的很好，还有一些别的平衡二叉树
                 }
-                hashset 使用了hashtable 来确保元素的唯一
-                hashSet 中的使用iterator 是迭代的hash 桶所以是无序的
-                java SetTest < alice30.txt 可以进行转换惊了
+
+                为了改善性能需要需要设定适当的桶数，并在hash table 负载超过总容量一定指数的时候（如总量的0.75）
+                java 默认的桶数是16，而且每次设定会被修正到2的倍数
+                重新生成新的hash table （rehashed） 默认绣着系数是0.75，桶数会变为原来的两倍
             }
-            dfeefe 
+            hashset 使用了hashtable 来确保元素的唯一
+            hashSet 中的使用iterator 是迭代的hash 桶所以是无序的
+            java SetTest < alice30.txt 可以进行转换惊了
+        }
+        这里又要重读内心稍微有点崩溃
+        TreeSet
+            treeSet 会保存的顺序，现在的实现是通过红黑树实现的，每个元素会被放在适当的排序位置
+            使用treeset 插入会比hashset慢，但也很快{
+                选择时不需要顺序的时候使用hash ，需要顺序使用树（一般都不需要）
+                使用hash可以使数据混乱，使用tree使用比较方法告诉元素之间的比较区别分类
+                对于无法比较的如使用举行面积比较，使用hash就可以了
+            }
+            奇怪的知识{
+                treeset 实现了NavigableSet 提供了一些关于比较的方法
+                可以用来获取元素附近最大或者最小的值等
+            }                
+        Queues and Deques 队列和双端队列
+            队列是在尾部添加元素，头部删除元素的数据结构
+            双端队列可以在两端删和增加，是一种实现队列和栈数据结构的数据结构
+            这两种队列都不可以对中间元素删增
+            这两增删都有两种实现方法, 一种实现方法会抛出异常，一种会扔出null，需要注意
+
+        priority Queues （优先队列）
+            优先队列会在元素被插入队列后重新检索排序，调用remove方法会返回最小的元素，但不会对所有元素进行排序，
+            需要提供对应的比较方法
+            这种结构应用有heap{
+                A heap is a self-organizing binary tree in which
+                the add and remove operations cause the smallest element to gravitate to
+                the root, without wasting time on sorting all elements.
+            }
+            可以用来做job schedule 没词执行优先级最高的任务
+            该迭代器不像treeset 访问有序的元素，只在remove时返回最小的元素
+    Map (映射关系)
+        通过key info获取完整元素信息，map就是这样的key/value 结构
+        基础map操作
+            提供了hashMap 和TreeMap 两种实现方式，这两种都是针对key 的数据结构，key 和value 的数据结构不是
+            map 想要检索元素必须通过key才能检索  
+            一些方法{
+                getOrDefault() 在key值对应value 不存在时，返回默认值
+                put() 相同的key时会替换原有的元素，并返回被替换的元素
+                forEach() 使用lambda表达式快速迭代
+            }          
+        更新map 的问题
+            主要是初次更新，返回的就元素为null 的处理
+            主要方法{
+                1. 使用getOrDefault 来获取值
+                2. 使用puIfAbsent 来初始化值
+                3. 最简单依据代码使用merge方法，初始化获取值操作一步到位
+                counts.merge(word, 1, Integer::sum);
+                还有很多和lambda 相关的方法，用来操作key value
+            }
+        map views （映射视图）
+            java 中的collection 框架不把map 视为collection ，可以获取实现collection的view （如KeySet）来操作map
+            map中的三种view {
+                1. the set of key
+                2. the set of key/value pairs 
+                3. the collection of value (vaule 本身可以是各种集合)
+                Set<K> keySet()
+                Collection<V> values()
+                Set<Map.Entry<K, V>> entrySet() // Entry 是定义在Map中的接口，第一次见到啊
+            }
+            需要知道操作keyset 是如何影响map的过程
+            通过 Keyset 或者 entryset 删除元素会直接影响map，但是不能进行添加 通过values 获取的元素集合也是
+        一些特殊用途的map（了解）
+            weak hash map {
+                使用弱关联连接key和value，来让gc快速回收
+                 gc检测到对象只用弱关联引用，会将其放入回收队列
+            }
+            linked hash sets and maps
+                通过再建立一个元素的linklist 来维护元素之间的顺序
+                使用是可以使用随机顺序，也可以使用插入顺序，key，value 都是随机顺序
+                插入或者删除都只会影响link list 不会影响hash桶
+                LinkedHashMap<K, V>(initialCapacity, loadFactor, true)；
+                可以用来删除最近最少使用的元素
+                protected boolean removeEldestEntry(Map.Entry<K, V> eldest) 通过重写这个方法实现
+            Enumeration Sets and Maps 枚举set 和map
+                EnumSet 通过一个有序的bits 来实现 A bit is turned on if the corresponding value is present in the set
+                只能使用静态方法进行构造
+                EnumMap 是key是枚举的集合通过数组实现，构造时需要声明枚举类型
+            identity hash map (标记hash map)
+                使用 System.identityHashCode（Object.hashCode） 获取hash值，不会调用重写的hashCode（）
+                使用地址值进行比较 所以用 == 
+                可以用来遍历算法中用于追踪已经遍历过的对象
+    views and wrapper （视图和封装）
+        views 是调用返回的一个实现Collection 的集合，并可以通过其的方法操作原有的map或者Collection
+        small collection {
+            java 9 中 提供了静态方法来获取集合
+            List<String> names = List.of("Peter", "Paul", "Mary");
+            Set<Integer> numbers = Set.of(2, 3, 5);
+            通过实例类型返回相应的类型
+            这类集合是不可修改的，想修改可以放入一个集合构造中
+            Collections.nCopies(100,"DEFAULT") 可以用来 获取具有相同元素的集合，所有引用指向同一个引用，节省内存
+            Arrays.asList 可以获取可以修改单不能添加或者删除的集合
+        }
+        subranges(子界)
+            构成子界views一定数量集合 （都需要有序）
+            List<Employee> group2 = staff.subList(10, 20);
+            操作subrange 会影响原集合
+            java6 添加了对获取子集边界的边界包含不包含的操作
+            NavigableSet<E> subSet(E from, boolean fromInclusive, E to, boolean toInclusive)
+        不可修改的views
+            Collections提供获取不可修改的views的方法
+            Collections.unmodifiableCollection 蛮多的，所有的都是定义在接口上，根据传入类型获取实例
+            这些接口封装不是真实的集合实例，只能使用接口具有的方法，不能使用传入元素的特有方法
+            如LinkedList 中的addFirst 不能在不可修改views使用
+            诡异的东西{
+                unmodifiableCollection、synchronizedCollection、checkedCollection 中的equals() 和hashCode() 使用的object
+                unmodifiableSet、unmodifiableList 使用潜在类型的实现
+            }    
+        synchronized views (同步视图)
+            同步视图，防止多线操作统一个集合的问题
+            不使用线程安全的集合而是通过view 的机制来保证线程安全
+             Collections.synchronizedMap(new HashMap<String,Employee>())
+             里面提供get 和put 操作每个方法必须完成在啊另一个线程调用的时候，可以在多线程并发中卡到
+        checked views (检查 views)
+            用于debugger可能发生在泛型上的问题
+            购将有泛型的类，吧其引用给没泛型的类，就可以插入不满足泛型的数据了，在调用get的时候会报错
+            由于泛型擦除机制，不调用get的情况下，可以向List中插入任意类型的数据类型，get类型强转才会报错
+            List<String> safeStrings = Collections.checkedList(strings, String.class); 可以这样定义一个类型检查的views
+            会检查插入的数据，插入式就检查（感觉也没啥用啊，及时定位吧）
+            ArrayList<Pair<String>> 这样的就没法保证了，还有泛型就太难了
+        a note on optional operations (可选择操作说明) {
+            1. a view通常具有某些限制，来完成目的，只读，不能添加等
+            2. 集合中黑多方法被描述为可选择的操作，是为了避免单独定义过多的接口（因为要实现当量的冲突需求，自己的接口不能这么写 ）
+        }
+
+    algorithms (算法)
+        java集合框架提供了一些算法使用，也可以自己写来使用。
+        泛型算法
+            只需要实现一次算法，就可以给不同的类使用比较最大值 直接用迭代器进行遍历，找出共同的方法接受Collection<T> 
+            提高通用性，算法通用性。
+        排序和打乱
+            排序默认调用实现的比较方法，否则需要自己传入比较方法
+            Comparator.comparingDouble(Employee::getSalary)
+            staff.sort(Comparator.reverseOrder())  // 这两种获取的都是反向排序
+            对于链表排序{
+                需要时用混合排序，因为不具备有随机访问的能力，java做法是复制到数组中然后进行排序
+                collections 中的排序算法比快速排序慢，但是是稳定不需要选择特定相等元素
+            }
+            可以用于排序的集合条件{
+                1. A list is modifiable if it supports the set method.
+                2. A list is resizable if it supports the add and remove operations.
+            }
+            shuffle 需要随机打乱顺序{
+                如果没有实现RandomAccess 接口会将其复制到数组中，然后打乱后再复制回去
+            } 
+        二分查找
+            对于排过序的查找可以使用二分查找法（效率极高）           
+            必须是实现List接口并排过序
+            二分法返回正数是该元素输出位置，负数取反 - 1 可以得到插入不影响排序的位置
+            二分法依赖radom access  使用linked list 查找 会导致使用迭代器从头遍历到中间，算法复杂度会变成线型
+            linkedList 使用的是线下搜索
+        一些简单但是实用的算法
+            {
+                找寻最大值
+                赋值集合到另一个集合
+                使用一个值填满集合
+                反转集合
+            }
+            方法的封装是为了更好的效率，和可读性和复用性
+            words.removeIf(w -> w.length() <= 3);
+            words.replaceAll(String::toLowerCase); 提供了一些方便的方法
+        批量处理
+            集合中的批量处理，不要自己写loop了
+            coll1.removeAll(coll2);
+            coll1.retainAll(coll2); // 找到共有的元素
+            通过操作view 可以批量操作collection 或者map 
+        collection 和 array 的互相转换
+        
+
+
+
+
+
+
+

@@ -15,3 +15,8 @@ Comparators
 Throwable
 ClassLoader
 Logger
+ArrayList
+LinkedList
+Collections
+集合中的同步view 集合中很多都可以看 
+Collection 中添加了一些lambda方法
