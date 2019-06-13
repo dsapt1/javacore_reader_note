@@ -1,6 +1,6 @@
 枚举的实现
 LocalDate 的实现 
-System 类要看
+System 类要看 里面有系统配置
 String 类要看
 Object
 Class 对象

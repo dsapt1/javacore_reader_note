@@ -339,7 +339,167 @@ char09Collections
             coll1.retainAll(coll2); // 找到共有的元素
             通过操作view 可以批量操作collection 或者map 
         collection 和 array 的互相转换
-        
+            String[] values = staff.toArray(new String[0]); // 只能这样特定类的数组，否则一律就是Object[] 且不能进行强转
+            如果规定相同呃数组长度，就不会穿凿新的数组。
+            不直接丢类型的原因是不能让他额外完成新建数组的功能，感觉实在逗我。
+        为Collection写一些自己的algorithm
+            写方法是接受的最好是通用Collection 最好就是借口Collection 提高通用性
+            如果这是迭代操作还可以接受Iterable借口，collection 继承了该接口
+            不使用Collection 作为接口参数和返回的方法，是因为在集合方法之前存在（冷笑话呃）
+    集合框架之前遗留的集合
+        已经被整合到java 集合框架中了，不建议使用（看看就的了）
+        hashtable {
+            和hashMap 本质是相同的接口，但是是同步的。
+            如果为了兼容捞代码可以使用，否则应对并发使用ConcurrentHashMap 类。
+        }
+        Enumerations{
+            旧有用于检索顺序的数据，可以使用Collection.list转换为arrayList
+            java9 中有别的操作，我估计用不到
+            是java1.2 子集合框架出现前的通用集合（不该遇到吧）
+        }
+        property maps（属性集合） {
+            1. key 和value 都是String
+            2. 这map可以方便的存储为文件或者从文件中加载
+            3. 有第二张表用于存放默认值
+            使用 Properties 类实现，一般是存储配置文件可以store 和load
+            该类实现的Map(Object,Object) 使用get、put处理的是Object
+            System.getProperty("user.home") 可以用于获取系统信息（我都不知道获取什么信息）
+
+            两种给默认值方法{
+                1. String filename = settings.getProperty("filename", "");
+                2. var settings = new Properties(defaultSettings); // 先存值到一个Properties 中在吧器作物参数放在构造中
+                就产生第二张表作为默认值（貌相好多配置都可以这样干） 还可以给默认指定默认，什么鬼东西
+            }
+
+            java 9 之前使用的是7-bit ASCII 编码 后改用 8-bit
+            properties没有复杂的层级关系，复杂的层级关系应该使用Preferences 类            
+        }
+        stacks
+            不完全满足栈结构可以在任意位置添加或者删除
+        bit Sets
+            用存储一序列bits，使用者可以直接操作对应的bit从而避免操作其他bit 如果用bit保存int 或者long值
+            保存的是true false 比List<Boolean> 效率高，操作的单位太小了啊
+            来个例子找素数一种算法，可以用来测试编译操作bit 能力
+
+            例如找到2 - 2,000,000 所有素数 是个诡异的算法
+            可以参考char09.BitSetTest 速度挺快的{ //放弃西靠
+                1. First, we turn on all the bits.
+                2. After that,we turn off the bits that are multiples of numbers known to be prime. 
+                3. The positions of the bits that remain after this process are themselves primenumbers.
+            } 不优化的化c++ 运行还不如java 优化后会领先
+char10 图形用户接口编程（看看）
+    看java做的傻屌桌面程序，开心开心
+    java 用户几口工具集历史
+        1.0 Abstract Window Toolkit (AWT)  调用目标平台本身的toolkit
+         使用不同平台的工具具有很大差别，不很写出高度统一的软件
+         导致 write once, debug everywhere. （不同平台会有不同的bug）
+
+        java 1.1 扩展开始基于Netscape 的ifc 实现的swing 通过接口元素来保证不同平台的运行效果是一致的
+        swing 是基于awt特别是时间触发{
+            说swing就是意味着界面绘画工作
+            说awt 是将的底层时间触发机制
+        }
+        swing 还是不计较的慢的，要绘制用户界面的每个像素。
+        反正又丑又落后Adobe Flash  的出现更难了，虽然flash 也被淘汰了
+        JavaFX 运行在vm上不过需要学新的语言，2011 javaFX2 整合到了jdk上了 ，java11 又不要了，真的是个废物
+    Displaying Frames （显示画面）
+        不被其他window包含的window在java中叫做frame，是最高级的window
+        是swing 无法操作的部分，使用的组件是系统自带的，用J 开口的组件是swing 中的另一种不是，两者最好不好混合使用
+        创建Frame{
+            所有的swing组件都需要一个时间派发线程（ the event dispatchthread）
+            参考：char10.FrameTest
+            这里使用 EventQueue.invokeLater() 来新建线程
+            需要选择组件的默认退出方式 // 不设置不会关闭程序在swing中
+            普通构造的frame 需要设置可见才会可见，之间可以进行组件的加载
+            main 线程完成初始化后就会结束 由 event dispatcher线程确保程序运行，调用System.exit() 结束进程
+            frame样式由系统决定，里面内容由swing决定
+        }
+        frame的属性{
+            1. setLocation、setBounds 来设置位置 setBounds 还可以设置大小
+            2. setIconImage 用于设置展示的icon
+            3. setTitle 设置标题栏
+            4. setResizable 是否可以被用户重定义大小
+        }   Component 是所有鬼类的父类
+            a Property 有名字或者类型 有一队get/set方法组成
+            如何真确的设置属性{
+                1. 通过getDefaultToolkit 获取Toolkit 对象（和窗口系统连接），可以获取窗口大小
+                2. 通过获取的Dimension 信息，设置适宜的frame 大小比例
+                3. 可以是用setImageCorn 来设置图标
+                4. 可以使用setLocationByPlatform 来设置合适位置
+            }
+    在frame中展示信息
+        frame 分为四层root pane, layered pane, and glass pane，我们在content pane中放置组件
+        放置组件示例 {
+            使用继承JComponent并重写paintComponent来放置图片或者文本
+            当window刷新是会调用所有组价你的paintComponent 方法
+            可以操作Graphics 类型用于绘制具体的类型，java中所有的绘制通过该类
+            paintComponent 是自动调用在redrawn的时候，不能收懂调用该方法
+        }
+        页面重新刷新有很多种情况，都会重新运行整个代码，也可以通过repaint重新调用。
+        在frame初始化的时候就把组件加进去，可以在组件中定义组件需要的frame大小通过pack使用
+        没法使用居中char10.FrameTest。
+        大部分组件添加刷新都是在frame 构造冲完成的，没这样写过代码
+    working with 2d shapes我也好画图了吗
+        可以是用java 2d lib 来操作2d图形 有Line2D，Rectangle2D 等通过Graphics2D操作
+        图像都是继承Shape 类由，draw() 方法调用
+        图像计算使用单精度浮点数，在华珍为零的过程中可能产生一像素的误差但不影响显示
+        不过因为java默认的是爽精度的double所以需要进行但进度的强转
+        float f = (float) r.getWidth(); // OK java 提供了两种精度的坐标使用
+        实现是通过两个静态内部类实现的 只是为了取名的原因呃
+        new Rectangle2D.Double(10.0, 25.0, 22.5,20.0); 这样获取双精度坐标的三角形
+        Rectangle2D 方法返回的是爽进度，即使用单精度构建的，坑爹啊。
+        想我用单精度省内存不可能，加内存不会啊。
+
+        Point2D{
+            用来显示点，感觉怪怪的
+            Ellipse2D 继承自Rectangle2D 图形（感觉我根本不会设计），椭圆有矩形的边距
+            java每次新功能都会对旧有jdk进行兼容，真的牛匹
+        }
+        矩形和椭圆的构造{
+            1.The x and y coordinates of the top left corner; // 矩形的左上角
+            2.The width and heigh
+            可以调用setFrameFromCenter ，setFrame 来构建椭圆或者圆，矩形是这两的基本画布，这个坐标有点有点怪异
+        }
+        使用颜色
+            使用setPaint 可以是graphics draw的东西带有颜色，可以调用fill来填充内院颜色
+            可以使用对应的rgb来创建需要的颜色（我感觉你在为难我这个色盲）            
+            可以通过setBackground 来设置背景颜色 setForeground 可以设置默认组件颜色
+        使用字体
+            GraphicsEnvironment 中的本地环境getAvailableFontFamilyNames() 获取可以使用的字体
+            默认有5种字体Oracle 的jdk 有加了3种
+            每inch有72个点{
+                plain, bold, italic, or bold italic 字体格式可以和字体名称一起使用
+                deriveFont 可以单独设定字体大小
+                font 构造第一个int是样式 ，后一个是大小
+            }
+            想要文字居中{
+                有方法可以直接获取组件的所处frame大小，从而保证位置的一致性    
+                有个很重要的事，frame 里面的y轴是朝下的，所以用+ 日狗了
+
+                1. 所用文字font
+                2. 文本本身
+                3. 显示文字的设备
+                通过g2.getFontRenderContext()  ，font.getStringBounds 可以获取一个放置文本的矩形和文本大小一致，用于文字的排版
+                决定矩形大小的因素{
+                    一行的高度有三部分 组成{
+                        ascent(基线上半部分)
+                        descent(基线下半部分)
+                        leading(descent到下一行ascent之间的距离)                    
+                    }
+                    水平范围长度可以通过getStringBounds 获取 可以通过StringBounds 获取相关的信息
+                    double ascent = -bounds.getY(); 这是负的呃，矩形的坐标呃
+                    getLineMetrics 获取对象从而获取descent和leading
+                }
+                不在paintComponent 方法中使用JComponent getFontMetrics getFontRenderContext来进行布局
+            }
+        展示图片（感觉可以了）
+            ImageIcon 可以获取缩率图，可以用来制作秘籍恐惧症的图
+            出现鼠标悬停出现白线的问题
+
+
+
+
+    
 
 
 
