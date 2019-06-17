@@ -2512,6 +2512,8 @@ minmaxBonus(managers,new Pair<Employee>());
   4. ParameterizedType 描述泛型类或者接 如：Comparable<? super T>
   5. GenericArrayType 描述泛型数组 T[]
 
+  ![4种泛型使用凡是](https://raw.githubusercontent.com/dsapt1/javacore_reader_note/master/Type%E6%8E%A5%E5%8F%A3%E5%8F%8A%E5%85%B6%E5%AD%90%E7%B1%BB%E6%88%96%E6%8E%A5%E5%8F%A3.png)
+  
 - Type Literals 
 
   可以根据具体的类型进行不同的操作
@@ -2534,6 +2536,10 @@ minmaxBonus(managers,new Pair<Employee>());
 ### 1、概述
 
 ​	数据结构会影响编码的格式（可读性）和性能，java实现了一些通用数据结构api供使用基本满足普通编程需求，java中的数据结构以集合框架为主。
+
+![集合框架接口总览](https://raw.githubusercontent.com/dsapt1/javacore_reader_note/master/%E9%9B%86%E5%90%88%E6%A1%86%E6%9E%B6%E7%9A%84%E6%8E%A5%E5%8F%A3%E7%A4%BA%E6%84%8F%E5%9B%BE.png)
+
+![集合框架类总览](https://raw.githubusercontent.com/dsapt1/javacore_reader_note/master/%E9%9B%86%E5%90%88%E6%A1%86%E6%9E%B6%E4%B8%AD%E7%9A%84%E7%B1%BB.png)
 
 ### 2、java collection （集合框架）
 
@@ -2628,6 +2634,12 @@ minmaxBonus(managers,new Pair<Employee>());
 
 - 使用link data双重关联的方式实现，使用链表删除或者新增其中一个元素只会影响该元素关联的两个元素
 
+  ![链表存储的双重关联](https://raw.githubusercontent.com/dsapt1/javacore_reader_note/master/%E9%93%BE%E8%A1%A8%E5%AD%98%E5%82%A8%E6%95%B0%E6%8D%AE%E4%B9%8B%E9%97%B4%E7%9A%84%E5%85%B3%E8%81%94.png)
+
+  ![LinkedList 添加元素](https://raw.githubusercontent.com/dsapt1/javacore_reader_note/master/%E4%BD%BF%E7%94%A8link%E8%BF%AD%E4%BB%A3%E5%99%A8%E6%B7%BB%E5%8A%A0%E5%85%83%E7%B4%A0.png)
+
+  ![链表删除元素](https://raw.githubusercontent.com/dsapt1/javacore_reader_note/master/%E4%BD%BF%E7%94%A8%E9%93%BE%E8%A1%A8%E5%88%A0%E9%99%A4.png)
+
 - 可以获取使用ListIterator和迭代器使用
 
   ```java
@@ -2638,6 +2650,8 @@ minmaxBonus(managers,new Pair<Employee>());
 
   迭代器中的remove 除了和迭代器的位置有关还和状态有关，只能上一次next() 删除左边的，previous删除右边的
 
+  ![迭代器运行方式](https://raw.githubusercontent.com/dsapt1/javacore_reader_note/master/java%E4%B8%ADiterator%E7%9A%84%E8%BF%90%E8%A1%8C%E6%96%B9%E5%BC%8F.png)
+
   ```java
   ListIterator<String> iter = list.listIterator();
   String oldValue = iter.next(); // returns first element
@@ -2646,7 +2660,7 @@ minmaxBonus(managers,new Pair<Employee>());
 
   在使用多个迭代器操作同一个集合需要使不同迭代器察觉集合的变化
 
-  表面这种情况有两种方法
+  解决这种情况有两种方法
 
   > 1. 可以建多个只读迭代器，或者一个既可以读也可以写的迭代器
   > 2. Collection 用个数记入每次增删操作，迭代器本身也具有一个改变记录数，每次迭代之前会比较两个数是否相同，针对set使用另一种侦测模式
@@ -2660,7 +2674,11 @@ minmaxBonus(managers,new Pair<Employee>());
 #### 2、ArrayList
 
 - 提供迭代器和随机访问两种访问方式
+
 - 是将元素压缩放入一个动态分配的数组之中
+
+  ![数组中删除元素的方法](https://raw.githubusercontent.com/dsapt1/javacore_reader_note/master/%E6%95%B0%E7%BB%84%E4%B8%AD%E5%88%A0%E9%99%A4%E5%85%83%E7%B4%A0%E7%9A%84%E6%96%B9%E5%BC%8F.png)
+
 - 线程不安全但是比Vector 效率高（一般都是单线程操作） 可以通过别的方式，或者新的线程安全类来控制线程安全。
 
 #### 3、HashSet
@@ -2670,6 +2688,8 @@ minmaxBonus(managers,new Pair<Employee>());
 - hashtable 存储数据结构的基本了解
 
   java中使用数组加 link list 来实现hash table，数组的每个元素都是一个link list ，这个元素叫做hash bucket。每个数据插入hashtable 时 会将其对应的hash值模以数组长度（hash桶数），取余就是该数据所在的数组索引位置，会遍历该位置对应的linkedlist 比较是否存在，不存在则插入。
+
+  ![hash table结构示意图](https://raw.githubusercontent.com/dsapt1/javacore_reader_note/master/hash_table%E7%A4%BA%E6%84%8F%E5%9B%BE.png)
 
   使用hash table 在确保hash bucket 足够大的情况下，拥有非常高的查询效率。
 
@@ -2707,6 +2727,9 @@ minmaxBonus(managers,new Pair<Employee>());
 #### 5、Queue and Deque (队列和双端队列)
 
 - 队列是在尾部添加元素，头部删除元素的数据结构
+
+  ![队列实现示意图](https://raw.githubusercontent.com/dsapt1/javacore_reader_note/master/%E9%98%9F%E5%88%97%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%BD%A2%E5%BC%8F.png)
+
   双端队列可以在两端删和增加，是一种实现队列和栈数据结构的数据结构
   这两种队列都不可以对中间元素删增
   这两增删都有两种实现方法, 一种实现方法会抛出异常，一种会扔出null，需要注意
@@ -2720,6 +2743,8 @@ minmaxBonus(managers,new Pair<Employee>());
   > A heap is a self-organizing binary tree in whichthe add and remove operations cause the smallest element to gravitate tothe root, without wasting time on sorting all elements.
 
 - 可以用来写job schedule 每次remove 获取优先级最高的任务，该迭代器在迭代时是无序的只有remove时才返回最小的元素。
+
+![collection的具体实现](https://raw.githubusercontent.com/dsapt1/javacore_reader_note/master/collection%E5%85%B7%E4%BD%93%E7%B1%BB%E6%8F%8F%E8%BF%B0.png)
 
 ### 5、Map （映射关系）
 
@@ -2778,6 +2803,8 @@ minmaxBonus(managers,new Pair<Employee>());
   LinkedHashMap<K, V>(initialCapacity, loadFactor, true)；
   可以用来删除最近最少使用的元素
   protected boolean removeEldestEntry(Map.Entry<K, V> eldest) 通过重写这个方法实现
+
+  ![linkedhashMap的双重链表](https://raw.githubusercontent.com/dsapt1/javacore_reader_note/master/linkhashMap%E7%9A%84%E5%8F%8C%E9%87%8D%E9%93%BE%E8%A1%A8%E7%BB%93%E6%9E%84.png)
 
 - Enumeration Sets and Maps 
 
@@ -2930,6 +2957,8 @@ minmaxBonus(managers,new Pair<Employee>());
 
 - 已经被整合到集合框架里面了，了解不要使用
 
+  ![旧有集合和集合框架之间的整合](https://raw.githubusercontent.com/dsapt1/javacore_reader_note/master/java%E9%9B%86%E5%90%88%E6%A1%86%E6%9E%B6%E7%BB%A7%E6%89%BF%E7%9A%84%E5%B0%B1%E6%9C%89%E9%9B%86%E5%90%88.png)
+
 #### 1、hashtable
 
 - 和hashMap 本质是相同的接口，但是是同步的。
@@ -3012,16 +3041,25 @@ minmaxBonus(managers,new Pair<Employee>());
   4. setResizable 是否可以被用户重定义大小
 
 - 如何获取正确的属性设置
+
   1. 通过getDefaultToolkit 获取Toolkit 对象（和窗口系统连接），可以获取窗口大小
   2. 通过获取的Dimension 信息，设置适宜的frame 大小比例
   3. 可以是用setImageCorn 来设置图标
   4. 可以使用setLocationByPlatform 来设置合适位置
+
+  
+
+  
+
+  ![jframe的继承体系](https://raw.githubusercontent.com/dsapt1/javacore_reader_note/master/JFrame%E7%9A%84%E7%BB%A7%E6%89%BF%E4%BD%93%E7%B3%BB.png)
 
 ### 3、在frame 中使用组件
 
 #### 1、概念
 
 - frame 分为四层root pane, layered pane, and glass pane，我们在content pane中放置组件
+
+  ![frame结构示意图](https://raw.githubusercontent.com/dsapt1/javacore_reader_note/master/JFrame的结构.png)
 
 #### 2、构造并组件运行的方式
 
@@ -3044,9 +3082,13 @@ minmaxBonus(managers,new Pair<Employee>());
 
 - 图像都是继承Shape 类由，draw() 方法调用
 
+  ![shape之间的继承关系](https://raw.githubusercontent.com/dsapt1/javacore_reader_note/master/shape%E4%B9%8B%E9%97%B4%E7%9A%84%E7%BB%A7%E6%89%BF%E5%85%B3%E7%B3%BB.png)
+
 - 图形的计算结果使用单精度浮点数，在取整的情况下会产生一像素的误差。
 
   但是java默认是双精度，需要进行转换new Rectangle2D.Double 这种方法提供两种精度坐标，注意即使是单精度坐标其返回结果也是双精度，惊不惊喜呃。
+
+  ![shape的双精度实现方式](https://raw.githubusercontent.com/dsapt1/javacore_reader_note/master/%E5%9B%BE%E5%BD%A2%E5%8F%8C%E7%B2%BE%E5%BA%A6%E5%9D%90%E6%A0%87%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F.png)
 
 - 注意这里面的2d坐标轴有轴是朝下的，组件的位置是相对于frame 的位置
 - 可以通过getWidth和getHeight 来获取组件说出frame 大小，用于巨剑布局
@@ -3094,6 +3136,8 @@ minmaxBonus(managers,new Pair<Employee>());
      ascent(基线上半部分)
      descent(基线下半部分)
      leading(descent到下一行ascent之间的距离)
+
+     ![字体格式示意图](https://raw.githubusercontent.com/dsapt1/javacore_reader_note/master/font%E6%A0%BC%E5%BC%8F.png)
 
   2. 宽度，水平范围长度可以通过getStringBounds 获取 可以通过StringBounds 获取相关的信息
 
