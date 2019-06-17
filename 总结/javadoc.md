@@ -2491,3 +2491,619 @@ minmaxBonus(managers,new Pair<Employee>());
 
 - 泛型类的实例无法获取泛型相关的信息，都被擦除了，但是可以通过classes反射来获取相关信息 
 
+- Class 本身是泛型类，使用Class<T> 可以直接返回对应的参数类型，无需强转
+
+  ```java
+  public static <T> Pair<T> makePair(Class<T> c) throws InstantiationException,
+  IllegalAccessException
+  {
+  	return new Pair<>(c.newInstance(), c.newInstance());
+  }
+  ```
+
+#### 1、虚拟机中可以获取的泛型信息
+
+虽然存在泛型擦除机制，无法通过类获取具体类型，但是人可以知道一部分信息
+
+- 通过api反射可以获取的信息，使用这些信息可以重新生成对应的泛型类
+  1. Class， 描述具体的类型
+  2. TypeVariable 描述泛型值 如T extends Comparable<? super T>
+  3. WildcardType 描述通配符如 ? super T
+  4. ParameterizedType 描述泛型类或者接 如：Comparable<? super T>
+  5. GenericArrayType 描述泛型数组 T[]
+
+- Type Literals 
+
+  可以根据具体的类型进行不同的操作
+
+  对不同的Type使用不同的字符串化，解决方法
+
+  > 1. 新建一个类保存Type 信息，该类的空参够早需要特别处理，可以根据匿名内部类获取泛型具体信息(获取需要特别的api)
+  > 2. 新建格式化类，其中是用map 保存类型信息和对应的处理方法，这里使用lambda表达式Function<T,R>
+  > 3. 运行格式化时，获取field 的泛型类型或本身类型进行对应的格式化处理参考代码，用了很多通配符
+  >   char08 中 GenericReflect （根数field的泛型属性 进行不同的操作，兼容不同的类） 还可以写嵌套，递归
+
+### 10、总结
+
+泛型类、泛型方法、泛型限定、通配符、通配符限定使用可以极大的提高方法的通用性，虽然比较的烦，还是值得的掌握的。
+
+一些相关的使用可以参考：http://angelikalanger.com/GenericsFAQ/JavaGenericsFAQ.html
+
+## Collections (集合)
+
+### 1、概述
+
+​	数据结构会影响编码的格式（可读性）和性能，java实现了一些通用数据结构api供使用基本满足普通编程需求，java中的数据结构以集合框架为主。
+
+### 2、java collection （集合框架）
+
+#### 1、产生和特点
+
+​	java1.2之前提供的数据结构功能有限，在1.2中重新设计了相应的集合框架，但由于功能和需求呃冲突，还有很多特异性设计存在冲突
+
+- 集合的接口和具体实现是分离，例如queue 队列数机构
+
+  ```java
+  public interface Queue<E> // a simplified form of the interface in t
+  {
+      void add(E element);
+      E remove();
+      int size();
+  }
+  //需要根据不同的情形选择实现，数组的实现效率更高，但是容量受限
+  ```
+
+  实现的两种方式，一种使用循环数组，一种是链表 可以通过代码自己实现
+
+- jdk 提供了一些集合接口的 Abstract 类用于继承，其已经实现部分功能。
+
+#### 2、Collection 接口
+
+- Collection 接口是集合框架的基础接口，主要包含两个方法
+
+  ```java
+  boolean add(E element);
+  Iterator<E> iterator(); // 返回实现Iterator 接口的实例用于遍历集合
+  ```
+
+- iterators(迭代器)
+
+  集合可以通过iterator() 获取相应的迭代器对象
+
+  主要方法包含
+
+  ```java
+  public interface Iterator<E>
+  {
+      E next();
+      boolean hasNext(); // 在next() 调用之前调用
+      void remove(); // 可以移除当前指针经过的元素，至少有个next() ,next()一次删一次
+      default void forEachRemaining(Consumer<? super E> action); // 用于lambda 表达式遍历
+  }
+  ```
+
+  使用iterator 迭代使用的顺序和具体的集合有关，是不可预测。
+
+  在iterator事前java使用Enumeration 进行迭代。
+
+  java中跌带起和STL之间的区别，stl模拟了数组可以使用index进行迭代，java只能使用next() 这就很尴尬了
+
+  > Instead, think of Java iterators as being between elements. When you callnext, the iterator jumps over the next element, and it returns a reference tothe element that it just passed (返回跳过的元素)
+
+- Collection 和Iterator 本身都是泛型接口可以操作任何类型的集合
+
+  Collection 提供了大部分常用功能，由AbstractCollection提供大部分的实现，但是没有实现size和iterator
+  在使用default 后Collection 没有重写AbstractCollection 中实现的方法，只是添加了一些写stream 中用的方法（蛋疼）
+
+### 3、集合框架中的接口总览
+
+- 集合框架拥有两个基本接口 Collection & Map
+
+- List  有序集合，可以使用迭代器或者索引获取，索引读取是随机的的没有固定顺序
+
+  主要的方法 ：
+
+  ```java
+  void add(int index, E element 随机获取相关的方法
+  void remove(int index)          
+  E get(int index)
+  E set(int index, E element)
+  ```
+
+  拥有 ListIterator  该迭代器具有添加方法
+
+  ```java
+  void add(E element) 在迭代位置之前添加一个元素
+  ```
+
+  对于有序集合java 提供随机访问和迭代器两种不同的实现来完成增删查功能，但是不推荐在LinkList中使用随机访问，因为其为实现instanceof RandomAccess 接口，其索引操作是通过迭代操作完成。
+
+- set 与Collection 基本一致，但添加了不能持有相同元素，不同顺序持有相同元素的集合是相同的功能描述，即其hashCode 是一致的。
+
+  SortedSet and SortedMap接口 包含了用于排序的比较器还定义了可以获取views的方法（此view概念后面有）
+
+### 4、集合框架中的具体实现类
+
+#### 1、LinkedList（有序集合）
+
+- 使用link data双重关联的方式实现，使用链表删除或者新增其中一个元素只会影响该元素关联的两个元素
+
+- 可以获取使用ListIterator和迭代器使用
+
+  ```java
+  E previous() // 可以向前迭代
+  boolean hasPrevious()
+  //迭代器位置是不变的情况使用add添加的，一次添加 a 、 b 后 顺序变为ab 不是（ba）迭代器顺序抱枕不变
+  ```
+
+  迭代器中的remove 除了和迭代器的位置有关还和状态有关，只能上一次next() 删除左边的，previous删除右边的
+
+  ```java
+  ListIterator<String> iter = list.listIterator();
+  String oldValue = iter.next(); // returns first element
+  iter.set(newValue); // sets first element to newValue // 修改迭代器返回的元素
+  ```
+
+  在使用多个迭代器操作同一个集合需要使不同迭代器察觉集合的变化
+
+  表面这种情况有两种方法
+
+  > 1. 可以建多个只读迭代器，或者一个既可以读也可以写的迭代器
+  > 2. Collection 用个数记入每次增删操作，迭代器本身也具有一个改变记录数，每次迭代之前会比较两个数是否相同，针对set使用另一种侦测模式
+
+  
+
+- 不是用random access 本质不是索引，会降低效率
+
+  可以使用list.listIterator(n) 范围迭代器替换list.get(n) 来获取更高的效率，通过nextIndex 和previousIndex方法进一部提高效率
+
+#### 2、ArrayList
+
+- 提供迭代器和随机访问两种访问方式
+- 是将元素压缩放入一个动态分配的数组之中
+- 线程不安全但是比Vector 效率高（一般都是单线程操作） 可以通过别的方式，或者新的线程安全类来控制线程安全。
+
+#### 3、HashSet
+
+- 无序不能重复，使用hash table 数据结构存储数据提供更加快速的查询速度
+
+- hashtable 存储数据结构的基本了解
+
+  java中使用数组加 link list 来实现hash table，数组的每个元素都是一个link list ，这个元素叫做hash bucket。每个数据插入hashtable 时 会将其对应的hash值模以数组长度（hash桶数），取余就是该数据所在的数组索引位置，会遍历该位置对应的linkedlist 比较是否存在，不存在则插入。
+
+  使用hash table 在确保hash bucket 足够大的情况下，拥有非常高的查询效率。
+
+  在java中 当linkedlist 被装满是会被转换为二叉树，用于提高大量重复hashcode的性能提升
+
+  > 在java8中该变为红黑树，红黑树具有以下四点特征，满足的才是红黑树
+  >
+  > 1. 节点只有红黑两种颜色
+  > 2. 根节点一定是黑色
+  > 3. 红色节点之间不能相邻、所有的节点其下都以null节点为子路径终止
+  > 4. 从根节点到任一null 记得点经过的黑色节点数目是一致的
+  >
+  > 红黑叔数是一种平衡二叉树，查询任一路径都不会超过其他路径2倍。当插入删除等操作破坏平衡数的平衡的时候，需要通过变色旋转操作使树重新复核上述四种红黑树特点。
+  >
+  > 可以参考：https://medium.com/basecs/painting-nodes-black-with-red-black-trees-60eacb2be9a5
+
+- 为了改善查询的性能需要设计适合的桶数，being设置hash table 负载（默认0.75）在超过负载的情况下rehashed
+
+  java默认的桶数是16，每次rehashed 桶数变为原来的两倍。
+  
+- 因为使用hashtable 来存储数据，所以是iterator 进行迭代时是无序大的，相同的数据使用不同的hash table 迭代的顺序也是不同的。
+
+#### 4、TreeSet
+
+- treeSet 会根据定义的比较器排序，现在的实现是通过红黑树实现的，每个元素会被放在适当的排序位置
+
+- treeSet的插入会比hashSet 慢，选用TreeSet的情况
+
+  > 1. 选择时不需要顺序的时候使用hash ，需要顺序使用树（一般都不需要）
+  > 2. 使用hash可以使数据混乱，使用tree使用比较方法告诉元素之间的比较区别分类
+  > 3.  对于无法比较的如使用矩形面积比较，使用hash就可以了
+
+- treeset 实现了NavigableSet 提供了一些关于比较的方法，可以用于获取各种临界值。
+
+#### 5、Queue and Deque (队列和双端队列)
+
+- 队列是在尾部添加元素，头部删除元素的数据结构
+  双端队列可以在两端删和增加，是一种实现队列和栈数据结构的数据结构
+  这两种队列都不可以对中间元素删增
+  这两增删都有两种实现方法, 一种实现方法会抛出异常，一种会扔出null，需要注意
+
+#### 6、priority queue (优先队列)
+
+- 优先队列会在元素被插入队列后重新检索排序，调用remove方法会返回最小的元素，但不会对所有元素进行排序。
+
+- heap 就使用这种数据结构 
+
+  > A heap is a self-organizing binary tree in whichthe add and remove operations cause the smallest element to gravitate tothe root, without wasting time on sorting all elements.
+
+- 可以用来写job schedule 每次remove 获取优先级最高的任务，该迭代器在迭代时是无序的只有remove时才返回最小的元素。
+
+### 5、Map （映射关系）
+
+#### 1、概念
+
+- 通过key值来获取完整的信息，通过可以key/value 结构保存数据的数据结构叫做map
+
+#### 2、基础map操作
+
+- java中提供了hashMap和TreeMap 两种实现方式，这这两种命名方式都是针对的key的实现方式，不包括value、键值对数据结构的实现方式
+- 常用的方法包含
+  1. getOrDefault() 在key值对应value 不存在时，返回默认值
+  2. put() 相同的key时会替换原有的元素，并返回被替换的元素
+  3. forEach() 使用lambda表达式快速迭代
+
+#### 3、更新map的问题
+
+- 主要是未初始化元素时，使用get返回null 的情况
+
+- 解决主要有三种方式
+
+  1. 使用getOrDefault 来获取值
+
+  2. 使用puIfAbsent 来初始化值
+
+  3. 最简单依据代码使用merge方法，初始化获取值操作一步到位
+
+     counts.merge(word, 1, Integer::sum);还有很多和lambda 相关的方法，用来操作key value
+
+#### 4、map  views（映射视图）
+
+- java 中的collection 框架不把map 视为collection ，可以获取实现collection的view （如KeySet）来操作map
+
+- map 中的三种view 
+
+  1. the set of key
+  2. the set of key/value pairs   （1,2 都是set）
+  3. the collection of value (vaule 本身可以是各种集合)
+
+  对应就是Set<K> keySet()、Collection<V> values()、Set<Map.Entry<K, V>> entrySet() // Entry 是定义在Map中的接口，第一次见到啊 这三个
+
+- 通过 Keyset 或者 entryset 删除元素会直接影响map，但是不能进行添加 通过values 获取的元素集合也是，需要知道操作view 影响原collection 的过程。
+
+#### 5、一些特殊用途的map（了解）
+
+- weak hash map
+
+  使用弱关联连接key和value，来让gc快速回收
+  gc检测到对象只用弱关联引用，会将其放入回收队列
+
+- linked hash sets and maps
+
+  通过再建立一个元素的linklist 来维护元素之间的顺序 (還是不要用的比较好)
+  使用是可以使用随机顺序，也可以使用插入顺序，key，value 都是随机顺序
+  插入或者删除都只会影响link list 不会影响hash桶
+  LinkedHashMap<K, V>(initialCapacity, loadFactor, true)；
+  可以用来删除最近最少使用的元素
+  protected boolean removeEldestEntry(Map.Entry<K, V> eldest) 通过重写这个方法实现
+
+- Enumeration Sets and Maps 
+
+  用于装枚举类的Set 或者Map 只能使用静态方法构造
+
+  EnumSet 通过一个有序的bits 来实现 A bit is turned on if the corresponding value is present in the set
+
+- identity hash map (标记hash map)
+
+  使用 System.identityHashCode（Object.hashCode） 获取hash值，不会调用重写的hashCode（）
+  使用地址值进行比较 所以用 == 
+  可以用来遍历算法中用于追踪已经遍历过的对象
+
+### 6、views and wrappers
+
+#### 1、概念
+
+- view 是根据原有map或者collection 生成的一个局部或者全部collection，可以通过操作view 操作操作原有的view或者collection。
+
+#### 2、small collection（小集合）
+
+- java 9 中可以通过静态可以获取集合实例
+
+  ```java
+  Set<Integer> numbers = Set.of(2, 3, 5);
+  List<String> names = List.of("Peter", "Paul", "Mary");
+  ```
+
+  这类集合是不可修改的，想修改可以放入一个集合构造中
+
+- Collections.nCopies(100,"DEFAULT") 可以用来 获取具有相同元素的集合，所有引用指向同一个引用，节省内存
+- Arrays.asList 可以获取可以修改单不能添加或者删除的集合
+
+#### 3、subranges(子界)
+
+- 构成子界views一定数量集合 （都需要有序）
+
+  ```
+  List<Employee> group2 = staff.subList(10, 20);
+  ```
+
+- 操作subrange 会影响原集合
+  java6 添加了对获取子集边界的边界包含不包含的操作
+
+  ```java
+  NavigableSet<E> subSet(E from, boolean fromInclusive, E to, boolean toInclusive)
+  ```
+
+#### 4、unmodifiable view(不可修改的视图)
+
+- Collections.unmodifiableCollection 可以获取相应的不可修改view还有其他集合接口也提供这种方法，所有的都是定义在接口上，根据传入类型获取实例这些接口封装不是真实的集合实例，只能使用接口具有的方法，不能使用传入元素的特有方法如LinkedList 中的addFirst 不能在不可修改views使用。（不能使用强转）
+
+- 是否使用潜在类型的hashCode() 、equals()
+
+  unmodifiableCollection、synchronizedCollection、checkedCollection 中的equals() 和hashCode() 使用的object
+  unmodifiableSet、unmodifiableList 使用潜在类型的实现
+
+#### 5、synchronized view (同步视图)
+
+- 使用view 操作线程不安全的collection，通过控制view 线程安全保障集合的安全
+
+  Collections.synchronizedMap(new HashMap<String,Employee>())
+  里面提供get 和put 操作每个方法必须完成在被另一个线程调用的之前。这样做的好处是啥。
+
+#### 6、checked view （检查视图）
+
+- 可以使用该是图校验单层泛型的插入类型是否符合需求
+
+- 由于泛型擦除机制，不调用get的情况下，可以向List中插入任意类型的数据类型，get类型强转才会报错
+
+  ```java
+  List<String> safeStrings = Collections.checkedList(strings, String.class); 
+  ```
+
+  可以这样定义一个类型检查的views，会检查插入的数据，插入时就检查，不符合就会报错
+
+- ArrayList<Pair<String>> 多层的不能进行校验
+
+#### 7、a note on optional operations（可选择操作的提示）
+
+1. a view通常具有某些限制，来完成目的，只读，不能添加等
+   2. 集合中很多方法被描述为可选择的操作，是为了避免单独定义过多的接口（因为要实现具有冲突的功能，自己写的接口应当避免这种情况）
+
+### 7、algorithms (算法)
+
+#### 1、java 集合框架中的算法
+
+- java集合框架提供了一些基本的算法主要在Collections 类中提供，你也可以自己实现，自带的算法遵从一些原则，基本的实现原理也需要知道
+
+#### 2、泛型算法
+
+- 为了提高算法的通用性，集合框架的算法大量使用泛型。如使用Collection<T>  作为参数或返回就可以给不同的集合类型提供统一的比较大小，获取迭代的方法。
+
+#### 3、排序和打乱
+
+- 排序可以使用默认的比较方式或者传入自定义的比较器
+
+  ```java
+  Comparator.comparingDouble(Employee::getSalary)
+  staff.sort(Comparator.reverseOrder())  // 这两种获取的都是反向排序
+  ```
+
+  对于链表的排序需要使用混合排序法，但是java 没这样做，由于链表不具有随机访问能力所以赋值到数组中在进行排序
+
+  Collections中的sort 比快速排序要慢，不过具有通用性，不需要选择特定的相等元素
+
+- 只有满足下面两点的集合才能够进行排序
+  1. A list is modifiable if it supports the set method.
+  2. A list is resizable if it supports the add and remove operations.
+
+- 使用shuffle进行随机打乱操作
+
+  如果没有实现RandomAccess 接口会将其复制到数组中，然后打乱后再复制回去。
+
+#### 4、二分查找法
+
+- 对于排过序的且可以随机访问的集合，可以使用二分查找法，可以带来极高的效率，所以必须实现List接口，使用链表实现效率也会比较低。
+- 二分法返回正数是该元素输出位置，负数取反 - 1 可以得到插入不影响排序的位置
+- 二分法依赖radom access  使用linked list 查找 会导致使用迭代器从头遍历到中间，算法复杂度会变成线型，因为LinkedList是用的检索方式是线型的
+
+#### 5、一些简单实用的算法
+
+- 找寻最大值、赋值集合到另一个集合、使用一个值填满集合、反转集合这些封装是为了更好的效率的可读性，和lambda结合可以带来很好的可读性。
+
+  ```java
+  words.removeIf(w -> w.length() <= 3);
+  words.replaceAll(String::toLowerCase); 提供了一些方便的方法
+  ```
+
+#### 6、批量处理
+
+- 集合中的批量处理，不要自己写loop了
+  coll1.removeAll(coll2);
+  coll1.retainAll(coll2); // 找到共有的元素
+  通过操作view 可以批量操作collection 或者map 
+
+#### 7、collection 和 array 的互相转换
+
+- ```java
+  String[] values = staff.toArray(new String[0]); // 只能这样特定类的数组，否则一律就是Object[] 且不能进行强转
+  //如果规定相同长度的数组，就不会创建新的数组。
+  ```
+
+#### 8、自己写相关算法的建议
+
+- 最好直接使用Collection 作为参数或者返回，来提高方法的通用性
+- 如果这是迭代操作还可以接受Iterable借口，collection 继承了该接口
+
+### 8、集合框架之前遗留的集合类
+
+- 已经被整合到集合框架里面了，了解不要使用
+
+#### 1、hashtable
+
+- 和hashMap 本质是相同的接口，但是是同步的。
+  如果为了兼容捞代码可以使用，否则应对并发使用ConcurrentHashMap 类。
+
+#### 2、Enumerations(枚举集合)
+
+- 旧有用于检索顺序的数据，可以使用Collection.list转换为arrayList
+  java9 中有别的操作，我估计用不到
+  是java1.2 子集合框架出现前的通用集合（不该遇到吧）
+
+#### 3、property map (属性集合)
+
+- 特点
+  1. key 和value 都是String
+  2. 这map可以方便的存储为文件或者从文件中加载
+  3. 可以内置map 用于存放默认值
+
+- 使用 Properties 类实现，一般是存储配置文件可以store 和load该类实现的Map(Object,Object) 使用get、put处理的是Object ，System.getProperty("user.home") 可以用于获取系统信息
+- 给配置默认值的两种方式
+  1. String filename = settings.getProperty("filename", "");
+  2. var settings = new Properties(defaultSettings); // 先存值到一个Properties 中在吧器作物参数放在构造中
+  就产生第二张表作为默认值（还可以给默认配置默认配置，不要这样干）
+
+- java 9 中7-bit ASCII 编码 后改用 8-bit utf- 8 
+
+  properties没有复杂的层级关系，复杂的层级关系应该使用Preferences 类
+
+#### 4、stacks
+
+- 不完全满足栈结构可以在任意位置添加或者删除 的实现
+
+#### 5、 bit sets（比特集合）
+
+- 用存储一序列bits，使用者可以直接操作对应的bit从而避免操作其他bit 如果用bit保存int 或者long值
+  保存的是true false 比List<Boolean> 效率高，操作的单位太小了啊
+- 可以用来找寻2- 2000000 之间的素数，参考char09.BitSetTest 还挺快的，不理解
+  1. First, we turn on all the bits.
+  2. After that,we turn off the bits that are multiples of numbers known to be prime. 
+  3. The positions of the bits that remain after this process are themselves primenumbers.
+
+图形用户接口编程（看看就行）
+
+### 1、java图形用户接口工具集历史
+
+1. 1.0 Abstract Window Toolkit (AWT)  调用目标平台本身的toolkit
+   使用不同平台的工具具有很大差别，不很写出高度统一的软件
+   导致 write once, debug everywhere. （不同平台会有不同的bug）
+
+2. java 1.1 扩展开始基于Netscape 的ifc 实现的swing 通过接口元素来保证不同平台的运行效果是一致的
+
+   swing 是基于awt 开发的特别是事件的触发，说swing 一般是界面的绘制，awt是将底层事件触发机制.
+
+3. swing由于是一个个像素绘制的所以速度还是比较慢的，而且丑，在flash 推出后，推出了vm上运行的JavaFX，不过需要学习新的语言，2011 javaFX2 整合到了jdk上了 ，java11 又移除
+
+### 2、displaying frame (显示画面)
+
+#### 1、概念
+
+- 不被其他window包含的window在java中叫做frame，是最高级的window
+
+  是swing 无法操作的部分，使用的组件是系统自带的，外观跟随系统走
+
+#### 2、创建frame
+
+- 所有的图形组件都需要一个事件派发线程（ the event dispatchthread）
+  参考：char10.FrameTest
+  这里使用 EventQueue.invokeLater() 来新建线程
+  需要选择组件的默认退出方式 // 不设置不会关闭程序在swing中
+  普通构造的frame 需要设置可见才会可见，之间可以进行组件的加载
+  main 线程完成初始化后就会结束 由 event dispatcher线程确保程序运行，调用System.exit() 结束进程
+  frame样式由系统决定，里面内容由swing决定
+
+#### 3、frame 中的常用属性
+
+- 常用的设置
+  1. setLocation、setBounds 来设置位置 setBounds 还可以设置大小
+  2. setIconImage 用于设置展示的icon
+  3. setTitle 设置标题栏
+  4. setResizable 是否可以被用户重定义大小
+
+- 如何获取正确的属性设置
+  1. 通过getDefaultToolkit 获取Toolkit 对象（和窗口系统连接），可以获取窗口大小
+  2. 通过获取的Dimension 信息，设置适宜的frame 大小比例
+  3. 可以是用setImageCorn 来设置图标
+  4. 可以使用setLocationByPlatform 来设置合适位置
+
+### 3、在frame 中使用组件
+
+#### 1、概念
+
+- frame 分为四层root pane, layered pane, and glass pane，我们在content pane中放置组件
+
+#### 2、构造并组件运行的方式
+
+1. 使用继承JComponent并重写paintComponent来放置图片或者文本
+2. 当window刷新是会调用所有组价你的paintComponent 方法（刷新的很频繁）
+3. 可以操作Graphics 类型用于绘制具体的类型，java中所有的绘制通过该类
+4. paintComponent 是自动调用在redrawn的时候，不能收懂调用该方法
+
+#### 3、组件一些使用方法
+
+- 页面重新刷新有很多种情况，都会重新运行整个代码，也可以通过repaint重新调用。
+- 在frame初始化的时候就把组件加进去，可以在组件中定义组件需要的frame大小通过pack使用
+- 组件添加卸载frame 的构造中，构造方法终于在这里体现了下
+
+### 4、绘制2d图形
+
+#### 1、基本概念
+
+- 可以是用java 2d lib 来操作2d图形 有Line2D，Rectangle2D 等通过Graphics2D操作
+
+- 图像都是继承Shape 类由，draw() 方法调用
+
+- 图形的计算结果使用单精度浮点数，在取整的情况下会产生一像素的误差。
+
+  但是java默认是双精度，需要进行转换new Rectangle2D.Double 这种方法提供两种精度坐标，注意即使是单精度坐标其返回结果也是双精度，惊不惊喜呃。
+
+- 注意这里面的2d坐标轴有轴是朝下的，组件的位置是相对于frame 的位置
+- 可以通过getWidth和getHeight 来获取组件说出frame 大小，用于巨剑布局
+
+#### 2、point2D(点)
+
+- 可以通过x，y来指定在特定地方显示
+
+#### 3、矩形和椭圆
+
+- 矩形和椭圆都继承自Rectangle2D，因为绘制椭圆依赖于矩形，swing 里面的布局都是依赖于椭圆的
+
+- 构建需要两个条件
+
+  1.The x and y coordinates of the top left corner; // 矩形的左上角
+  2.The width and height
+
+- 也可以根据中心店，调用setFrameFromCenter、setFrame来构建椭圆或者圆（圆也是椭圆）
+
+#### 4、使用颜色
+
+- 使用setPaint 可以是graphics draw的东西带有颜色，可以调用fill来填充内院颜色
+  可以使用对应的rgb来创建需要的颜色（我感觉你在为难我这个色盲）            
+  可以通过setBackground 来设置背景颜色 setForeground 可以设置默认组件颜色
+
+#### 5、使用字体
+
+- GraphicsEnvironment 中的本地环境getAvailableFontFamilyNames() 获取可以使用的字体
+
+  java 自带5种oracle的发新版还要加3种，还有本地字体
+
+- 字体显示中每inch是72个点，字体可以设置的属性
+  1. plain, bold, italic, or bold italic 字体格式可以和字体名称一起使用
+  2. deriveFont 可以单独设定字体大小
+  3. font 构造第一个int是样式 ，后一个是大小
+
+- 文字在frame居中显示
+
+  可以通过g2.getFontRenderContext() ，font.getStringBounds 获取一个放置文本的矩形，用于文字排版
+
+  决定矩形的的要素
+
+  1.  高度，矩形的高度由三部分组成
+
+     ascent(基线上半部分)
+     descent(基线下半部分)
+     leading(descent到下一行ascent之间的距离)
+
+  2. 宽度，水平范围长度可以通过getStringBounds 获取 可以通过StringBounds 获取相关的信息
+
+  可以通过double ascent = -bounds.getY(); 这是负的 来获取ascent
+
+  getLineMetrics 获取对象从而获取descent和leading
+
+- 不在paintComponent 方法中可以使用JComponent getFontMetrics getFontRenderContext来进行布局。
+- 可以参考char10/FontTest.java 的代码实现
+
+#### 6、展示图片
+
+- ImageIcon可以获取缩率图，也可以直接展示图片，还要指定缩率大小呃
