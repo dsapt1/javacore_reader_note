@@ -1,0 +1,173 @@
+char10
+    event handling (事件处理)
+        通过监视鼠标，键盘等外设处罚的事件，程序对相应的事件作出回应。
+        基本时间处理概念
+            java awt 通过注册event listener 来处理event 的response
+            所有事件相关信息会被封装到EventObject 的子类中
+            event working in the awt {
+                1. 一个继承listener 接口的类的实例叫做一个事件监听器
+                2. 事件来源可以注册到事件监听器上，并发送相应的事件对象
+                3. 当事件发生时，事件来源将事件对象发送给所有注册的监听器
+                4. 监听器使用事件对象中的信息决定对事件的反应。
+            }
+        处理一个按钮点击（示例）
+            添加一个点击会更换panel颜色的程序
+            创建一个按钮通过JButton 直接构造就可以了(JButton 是个Component)
+            为每个按钮添加监听器（在监听器器够早中给与不同，空槽构造用惯的坏处）
+            获取外层frame 的方法作为构造参数出入，或者吧监听器写成frame 的内部类
+            按钮不是直接放在frame 上的，是放在panel 上的，
+            参考：char10.ButtenTest 代码
+
+        指定监听简化
+            使用lambda 表达式来代替监听器来执行功能（简化代码，省去自定义类） 之前用的匿名内部类
+            ex：exitButton.addActionListener(event -> System.exit(0))    
+            参考 char10.ButtonLambdaTest
+        adapter class(适配类)
+            提供更加复杂的事件机制，如WindowEvent需要天剑对应的WindowListener 监视器
+            windowLister 可以实现其中的方法，来处理不同的事件，相关时间发生时会调用该方法
+            比起实现windowLister 中的所用法法使用windowAdapter 提供了do=nothing的实现
+            Adapter 提供给有多个方法的Listener 实现，简化开发
+
+        actions
+            将多个事件绑定同一个监听器，可以通过工具栏按钮，菜单，快捷键等方式触发相同的操作
+            通过action 类（继承ActionListener）压缩封装，用于显示在按钮表或者菜单或者工具栏上{
+                1. 命令的描述（文本加可选的图标）
+                2. 执行命令所需的参数。
+            }
+            可以设置action是否可用，基本属性 包括名字和图标，还可以添加short description 用于提示
+            Action 是借口可以通过AbstractAction 继承来减少不必要方法的实现
+            通过putvalue添加时间运行所需的参数
+            可以通过KeyStroke.getKeyStroke 来获取快捷键对象
+            通过快捷键运行，不是当前聚焦的组件。java 通过三个map来储存三个不同类型的跨借鉴{
+                1. WHEN_FOCUSED 聚焦时
+                2. WHEN_ANCESTOR_OF_FOCUSED_COMPONENT 包含聚焦组件的底层组件
+                3. WHEN_IN_FOCUSED_WINDOW 窗口上的组件聚焦时
+                运行顺序是先看聚焦组件是否存在，然后是地城组件，最后是window上的其他所有可用的无关组件
+                Component.getInputMap  可以获取对应的keystroke 和任意对象，在通过ActionMap 来关联Action
+                有助于在不同的inputMap中分享相同的action，所以一个component 有三个inputmap 一个actionamp
+            }
+            为按钮工具栏，快捷键提供相同action 返回{
+                1. 实现一个集成AbstractAction类的类
+                2. 够早一个该类实例
+                3. 使用该实例构造按钮、菜单
+                4. 由快捷键触发的action，需要确定the top-level component of windowLister
+                5. 通过顶级组件获取对应的input map ， 添加对应的keystore 和actionkey
+                6. 通过顶级组件获取actionmap， 添加对应的action key 和action Object
+            }
+            参考 char10.ActionTest 快捷键字母需要大写
+        mouse event （鼠标事件）
+            鼠标点击其他组件的事件，会直接滴哦用组件的用户接口，这里是追踪鼠标本身的事件
+            这里是画移动擦除方块
+            点击鼠标的时候会触发三个监听方法 mousePressed 、mouseReleased 、mouseClicked 
+            可以通过mouseEvent 的getX，getY获取坐标，getClickCount获取点击次数
+
+            测试功能是 单击新增（坐标不在其他矩形内），双击清除
+            鼠标监听被分为MouseListener、MouseMotionListener ，一个只关心鼠标点击，一个关联鼠标的移动
+            两个接口底下有不同的监听方法
+            mouseMoved通过监听鼠标的移动，如果移动到矩形上，将会改变光标的图形
+            mouseDragged 是按住拖拽鼠标调用的方法，在配脱出组件之后都会被持续调用
+            mouseEntered、mouseExited 鼠标进入或者移除一个组件
+            MouseAdapter 只实现了5中方法中的两种 MouseMotionHandler 实现了接口中的所用方法
+        awt的时间层级
+            所有的awt 事件继承自 awt Event ,Swing 中有些直接继承Event Object 的事件
+            事件对象由于将事件信息封装传递给listener。PaintEvent  不被使用反而是通过paintComponent方法实现呃
+            awt 会生成一些列用于系统编程需要，如表一语言，自动测试等等（不知道呃）
+            awt可以分为低级事件和语义事件{
+                点击按钮是语义事件是有底层事件完成的，鼠标移动，up、down，必须在指定区域操作鼠标才可以。
+                跨借鉴也是底层事件。语义事件是通过底层事件完成的。
+            }
+            awt中最常用的语义事件{
+                1. actionEvent 按钮点击、菜单选择
+                2. adjustEvent 用户调节滚动栏
+                3. itemEvent 用户操作复选框，或一个列表
+                4. keyEvent 一个键的按和释放
+                5. MouseEvent 鼠标移动点击事件
+                6. mouseWheelEvent 鼠标滚动事件（啥？）
+                7. FocusEvent 组件聚焦事件
+                8. windowEvent 窗口状态改变事件
+                都有对应的event handler ，有些事件会有多个不同的handler
+            }
+    the preferences api （偏好api）
+        由于保存用户偏好
+        不使用properities 存储的原因{
+            不同的操作系统有不同的目录结构，没有统一存放文件的位置
+            安装多个java程序的时候配置文件命名不方便
+        }
+        使用preference 类似于windows 的注册表用于统一管理配置，通过和package 类似呃节点保存key/value,
+        为了灵活使用，会存在多个平行书保存不用用户的配置，并存在system tree 用于记录面对所有用户的配置，会根据当前用户使用适当的配置
+        获取配置的方法{
+            1. references root = Preferences.userRoot()
+            2. Preferences root = Preferences.systemRoot()
+            // 这样获取节点
+            Preferences node = root.node("/com/mycompany/myapp")
+            Preferences node = Preferences.userNodeForPackage(obj.getClass());
+            根据节点获取value时需要提供默认值
+            通过 put(key,value) 来存储数据
+            通过keys()遍历所有方法。
+        }
+        注意点：Node names and keys are limited to 80 characters, and string values to 8192 characters.
+        中央仓库存在问题{
+            1. 变成一个充满过时信息的垃圾堆
+            2. 仓库中的信息变的纠缠混乱，变的难以一直到新平台
+            perference 通过文件导出可以导出配置，导出xml格式的文件
+            void exportSubtree(OutputStream out
+            void exportNode(OutputStream out)
+            void importPreferences(InputStream in) 导入配置
+        }
+        总感觉这演示太难 参考char10.PreferenceTest win10 运行报错不影响运行，不过真的丑。
+        真感觉就是来我们已经了解了1+1 = 2 ，来我们接下来实战下算下高数题
+
+char11 swing的用户接口组件
+    目的构建有更多功能的gui呃，艹第二本还有我的个操蛋啊
+    swing和mvc设计模式
+        构成组件的三个部分{
+            1. 本身的内容
+            2. 视觉外观
+            3. 本事的行为(reaction to event) 处理各种事件
+        }
+        swing采取了mvc的设计模式{
+            1. 模型层存储内容，（模型层是不可见的）
+            2. 视图层，展示内容，会决定显示的内容样式
+            3. 控制层，处理用户的输入
+            使用mvc的好处有一个模型可以有多种视图
+        }
+        swing 中模型层大多以Model结尾
+        ButtonModel model = button.getModel(); 可以这样获取JButton的model
+        通常所有组建的一个关联view 以UI结尾，但不一定有专用的控制层
+        一个JButton 会有 ButtonModel 、UI 的视图、对应的controller 组成
+    布局管理介绍
+        需要了解底层布局的实现方式，即使最好的工具也要手动调整，代码布局已经很难为我了
+        布局管理(组件)
+            之前使用的JPanel使用了默认的flow布局管理
+            将组建放在容器中，由容器进行布局管理，决定组件的位置和大小
+            Container 本身能放component 因为集成Component 也可以放别的Container
+            一些注意点{
+                First, top-level windows, such as JFrame, are subclasses
+                of Container and hence Component, but they cannot be placed
+                inside other containers. Moreover, JComponent is a subclass of
+                Container, not Component. Therefore one can add other
+                components into a JButton. (However, those components would
+                not be displayed
+                这么熟jbutton本身也是个容器，它本身也是有布局管理的
+            }
+            配置自定义的布局管理：panel.setLayout(new GridLayout(4, 4));
+        边界布局（border layout）
+             border layout manager 是每个JFrame的默认布局管理，和 the flow layout manager 帮你管理每个组件，你需要
+             自己选择每个组件的布局。
+             划分成东西南北中 5个区域进行布局，边缘打的组件先占有，然后剩余的由中间占有，默认不传的化时中间布局呃
+             边界布局是使用组件覆盖所有可以使用的空间，流式是调整适当的大小，边界布局添加第二个组件会取代第一个组件
+             解决方法是添加额外的panel，就想新添加JPanel这样在指定的位置（其默认的flow layout），这里边界布局会将新的panel填充满
+             整个指定空间
+        网格布局（grid layout）
+            安排所有的组件在表格上根据行数和列数，组件会自动resize 适应布局，可以使用一行一列的网格布局管理window的局部区域
+            可以用来敲非常多的东西
+    文本输入（text input）
+        用于输入和编辑文本
+        JTextField和JTextArea、JPasswordField 用于接受不同类型的文本 都继承自JTextComponent
+        提供了 getText()、setText()、setEditable()这些基本方法
+        text Field（文本域）
+            一般使用将其加入类似于Jpanel的容器之中，其中可以设置长度，允许用户输入的最大文字长度，该column缺少精度
+            textField.setColumns(10);
+            panel.revalidate();充值长度之后需要调用该方法，让该容器中的所有组件进行重新布局
+            revalidate 是JComponent中的方法，不会立即重新resize，而是标记为resing避免多个组件要求resize的重复运算
+            可以调用JFrame（非组件子类） validate()立即进行重新布局
