@@ -1,0 +1,1098 @@
+char10
+    event handling (事件处理)
+        通过监视鼠标，键盘等外设处罚的事件，程序对相应的事件作出回应。
+        基本时间处理概念
+            java awt 通过注册event listener 来处理event 的response
+            所有事件相关信息会被封装到EventObject 的子类中
+            event working in the awt {
+                1. 一个继承listener 接口的类的实例叫做一个事件监听器
+                2. 事件来源可以注册到事件监听器上，并发送相应的事件对象
+                3. 当事件发生时，事件来源将事件对象发送给所有注册的监听器
+                4. 监听器使用事件对象中的信息决定对事件的反应。
+            }
+        处理一个按钮点击（示例）
+            添加一个点击会更换panel颜色的程序
+            创建一个按钮通过JButton 直接构造就可以了(JButton 是个Component)
+            为每个按钮添加监听器（在监听器器够早中给与不同，空槽构造用惯的坏处）
+            获取外层frame 的方法作为构造参数出入，或者吧监听器写成frame 的内部类
+            按钮不是直接放在frame 上的，是放在panel 上的，
+            参考：char10.ButtenTest 代码
+
+        指定监听简化
+            使用lambda 表达式来代替监听器来执行功能（简化代码，省去自定义类） 之前用的匿名内部类
+            ex：exitButton.addActionListener(event -> System.exit(0))    
+            参考 char10.ButtonLambdaTest
+        adapter class(适配类)
+            提供更加复杂的事件机制，如WindowEvent需要天剑对应的WindowListener 监视器
+            windowLister 可以实现其中的方法，来处理不同的事件，相关时间发生时会调用该方法
+            比起实现windowLister 中的所用法法使用windowAdapter 提供了do=nothing的实现
+            Adapter 提供给有多个方法的Listener 实现，简化开发
+
+        actions
+            将多个事件绑定同一个监听器，可以通过工具栏按钮，菜单，快捷键等方式触发相同的操作
+            通过action 类（继承ActionListener）压缩封装，用于显示在按钮表或者菜单或者工具栏上{
+                1. 命令的描述（文本加可选的图标）
+                2. 执行命令所需的参数。
+            }
+            可以设置action是否可用，基本属性 包括名字和图标，还可以添加short description 用于提示
+            Action 是借口可以通过AbstractAction 继承来减少不必要方法的实现
+            通过putvalue添加时间运行所需的参数
+            可以通过KeyStroke.getKeyStroke 来获取快捷键对象
+            通过快捷键运行，不是当前聚焦的组件。java 通过三个map来储存三个不同类型的跨借鉴{
+                1. WHEN_FOCUSED 聚焦时
+                2. WHEN_ANCESTOR_OF_FOCUSED_COMPONENT 包含聚焦组件的底层组件
+                3. WHEN_IN_FOCUSED_WINDOW 窗口上的组件聚焦时
+                运行顺序是先看聚焦组件是否存在，然后是地城组件，最后是window上的其他所有可用的无关组件
+                Component.getInputMap  可以获取对应的keystroke 和任意对象，在通过ActionMap 来关联Action
+                有助于在不同的inputMap中分享相同的action，所以一个component 有三个inputmap 一个actionamp
+            }
+            为按钮工具栏，快捷键提供相同action 返回{
+                1. 实现一个集成AbstractAction类的类
+                2. 够早一个该类实例
+                3. 使用该实例构造按钮、菜单
+                4. 由快捷键触发的action，需要确定the top-level component of windowLister
+                5. 通过顶级组件获取对应的input map ， 添加对应的keystore 和actionkey
+                6. 通过顶级组件获取actionmap， 添加对应的action key 和action Object
+            }
+            参考 char10.ActionTest 快捷键字母需要大写
+        mouse event （鼠标事件）
+            鼠标点击其他组件的事件，会直接滴哦用组件的用户接口，这里是追踪鼠标本身的事件
+            这里是画移动擦除方块
+            点击鼠标的时候会触发三个监听方法 mousePressed 、mouseReleased 、mouseClicked 
+            可以通过mouseEvent 的getX，getY获取坐标，getClickCount获取点击次数
+
+            测试功能是 单击新增（坐标不在其他矩形内），双击清除
+            鼠标监听被分为MouseListener、MouseMotionListener ，一个只关心鼠标点击，一个关联鼠标的移动
+            两个接口底下有不同的监听方法
+            mouseMoved通过监听鼠标的移动，如果移动到矩形上，将会改变光标的图形
+            mouseDragged 是按住拖拽鼠标调用的方法，在配脱出组件之后都会被持续调用
+            mouseEntered、mouseExited 鼠标进入或者移除一个组件
+            MouseAdapter 只实现了5中方法中的两种 MouseMotionHandler 实现了接口中的所用方法
+        awt的时间层级
+            所有的awt 事件继承自 awt Event ,Swing 中有些直接继承Event Object 的事件
+            事件对象由于将事件信息封装传递给listener。PaintEvent  不被使用反而是通过paintComponent方法实现呃
+            awt 会生成一些列用于系统编程需要，如表一语言，自动测试等等（不知道呃）
+            awt可以分为低级事件和语义事件{
+                点击按钮是语义事件是有底层事件完成的，鼠标移动，up、down，必须在指定区域操作鼠标才可以。
+                跨借鉴也是底层事件。语义事件是通过底层事件完成的。
+            }
+            awt中最常用的语义事件{
+                1. actionEvent 按钮点击、菜单选择
+                2. adjustEvent 用户调节滚动栏
+                3. itemEvent 用户操作复选框，或一个列表
+                4. keyEvent 一个键的按和释放
+                5. MouseEvent 鼠标移动点击事件
+                6. mouseWheelEvent 鼠标滚动事件（啥？）
+                7. FocusEvent 组件聚焦事件
+                8. windowEvent 窗口状态改变事件
+                都有对应的event handler ，有些事件会有多个不同的handler
+            }
+    the preferences api （偏好api）
+        由于保存用户偏好
+        不使用properities 存储的原因{
+            不同的操作系统有不同的目录结构，没有统一存放文件的位置
+            安装多个java程序的时候配置文件命名不方便
+        }
+        使用preference 类似于windows 的注册表用于统一管理配置，通过和package 类似呃节点保存key/value,
+        为了灵活使用，会存在多个平行书保存不用用户的配置，并存在system tree 用于记录面对所有用户的配置，会根据当前用户使用适当的配置
+        获取配置的方法{
+            1. references root = Preferences.userRoot()
+            2. Preferences root = Preferences.systemRoot()
+            // 这样获取节点
+            Preferences node = root.node("/com/mycompany/myapp")
+            Preferences node = Preferences.userNodeForPackage(obj.getClass());
+            根据节点获取value时需要提供默认值
+            通过 put(key,value) 来存储数据
+            通过keys()遍历所有方法。
+        }
+        注意点：Node names and keys are limited to 80 characters, and string values to 8192 characters.
+        中央仓库存在问题{
+            1. 变成一个充满过时信息的垃圾堆
+            2. 仓库中的信息变的纠缠混乱，变的难以一直到新平台
+            perference 通过文件导出可以导出配置，导出xml格式的文件
+            void exportSubtree(OutputStream out
+            void exportNode(OutputStream out)
+            void importPreferences(InputStream in) 导入配置
+        }
+        总感觉这演示太难 参考char10.PreferenceTest win10 运行报错不影响运行，不过真的丑。
+        真感觉就是来我们已经了解了1+1 = 2 ，来我们接下来实战下算下高数题
+
+char11 swing的用户接口组件
+    目的构建有更多功能的gui呃，艹第二本还有我的个操蛋啊
+    swing和mvc设计模式
+        构成组件的三个部分{
+            1. 本身的内容
+            2. 视觉外观
+            3. 本事的行为(reaction to event) 处理各种事件
+        }
+        swing采取了mvc的设计模式{
+            1. 模型层存储内容，（模型层是不可见的）
+            2. 视图层，展示内容，会决定显示的内容样式
+            3. 控制层，处理用户的输入
+            使用mvc的好处有一个模型可以有多种视图
+        }
+        swing 中模型层大多以Model结尾
+        ButtonModel model = button.getModel(); 可以这样获取JButton的model
+        通常所有组建的一个关联view 以UI结尾，但不一定有专用的控制层
+        一个JButton 会有 ButtonModel 、UI 的视图、对应的controller 组成
+    布局管理介绍
+        需要了解底层布局的实现方式，即使最好的工具也要手动调整，代码布局已经很难为我了
+        布局管理(组件)
+            之前使用的JPanel使用了默认的flow布局管理
+            将组建放在容器中，由容器进行布局管理，决定组件的位置和大小
+            Container 本身能放component 因为集成Component 也可以放别的Container
+            一些注意点{
+                First, top-level windows, such as JFrame, are subclasses
+                of Container and hence Component, but they cannot be placed
+                inside other containers. Moreover, JComponent is a subclass of
+                Container, not Component. Therefore one can add other
+                components into a JButton. (However, those components would
+                not be displayed
+                这么熟jbutton本身也是个容器，它本身也是有布局管理的
+            }
+            配置自定义的布局管理：panel.setLayout(new GridLayout(4, 4));
+        边界布局（border layout）
+             border layout manager 是每个JFrame的默认布局管理，和 the flow layout manager 帮你管理每个组件，你需要
+             自己选择每个组件的布局。
+             划分成东西南北中 5个区域进行布局，边缘打的组件先占有，然后剩余的由中间占有，默认不传的化时中间布局呃
+             边界布局是使用组件覆盖所有可以使用的空间，流式是调整适当的大小，边界布局添加第二个组件会取代第一个组件
+             解决方法是添加额外的panel，就想新添加JPanel这样在指定的位置（其默认的flow layout），这里边界布局会将新的panel填充满
+             整个指定空间
+        网格布局（grid layout）
+            安排所有的组件在表格上根据行数和列数，组件会自动resize 适应布局，可以使用一行一列的网格布局管理window的局部区域
+            可以用来敲非常多的东西
+    文本输入（text input）
+        用于输入和编辑文本
+        JTextField和JTextArea、JPasswordField 用于接受不同类型的文本 都继承自JTextComponent
+        提供了 getText()、setText()、setEditable()这些基本方法
+        text Field（文本属性）
+            一般使用将其加入类似于Jpanel的容器之中，其中可以设置长度，允许用户输入的最大文字长度，该column缺少精度
+            textField.setColumns(10);
+            panel.revalidate();充值长度之后需要调用该方法，让该容器中的所有组件进行重新布局
+            revalidate 是JComponent中的方法，不会立即重新resize，而是标记为resing避免多个组件要求resize的重复运算
+            可以调用JFrame（继承自Componentgit） validate()立即进行重新布局
+        label and labeling 组件
+            1. 构建需要的文本标签
+            2. 将其放置在需要标签的组件上
+            SwingConstants 可以配置标签的样式，label中可以使用html 改变样式，一般也是放在容器中
+        password Field
+            JPasswordField 用于隐藏密码的输入使用相同的模型层，不同的显示层
+        text Areas
+            可以操作多行文本使用'\n' 作为换行符
+            需要规定每行行数和每行字符，太长的文本可以setLineWrap 设置文本封装
+        scroll Panes（滚动轴）
+            只有放入滚动窗格中参会有滚动条，组件的嵌套
+            scroll 时间又改组件自行处理不需要你自己处理，该该机制对所有的组件都有用
+            JEditorPane 才可以操作文本域中的字体（JTextArea没有，不能处理html这样的文本）。
+    choice component(选择组件)
+        用于个用户优先的输入选项，提高用户使用体验
+        checkboxes（复选框）
+            自带label 通过重复点击和确认的组件
+            bold = new JCheckBox("Bold");可以这样定义，点击选择框的时候会触发事件，
+            下面的例子共用一个触发器，lambda返回的实例用接口接受，没怎么见过的用法 
+            因为event的结果是有多个复选框共同决定的
+            可以提高触发器的同游性
+            边界布局和流布局方式不同，不过怎么把label放中间呢
+            参考：char11.CheckBoxTest
+            JCheckBox(String label, boolean state) 可以设置初始是否选中
+        radio buttons
+            单选，只能在选项中选择一个，选中一个会自动将其他选中置空
+            通过向ButtonGroup 添加JRadioButton 来实现呃，group来管理选中    
+            每个按钮需要不同的监听器来处理event，而复选是一个监听器，也可以用分情况处理不过会产生代码的冗余呃。
+            通过buttonGroup获取当前选中的单选框的过程比较复杂呃。
+            注意： 即使添加选中的按钮，并不会直接出发该按钮的事件，需要额外的初始化
+            char11.RadioButtonTest 还是的想下再去写代码。
+        borders（边框）
+            使用边框可以将组建之间进行布局，一般用法是使用边框包含panel，再在边框中放入相应的组件 
+            调用边框的步骤{
+                1. 通过BorderFactory选择需要创建的边框类型
+                2. 通过BorderFactory.createTitledBorder 设置名字
+                3. BorderFactory.createCompoundBorder 用于联合多种边框
+                4. 通过setBorder 给组件添加边框
+            }
+            不同的边框需要通过不同的方式设置宽度和颜色
+        Combo box
+            从多个选项中选择，为了节省空间使用下拉框的形式
+            下拉框被设置成editable 可以编辑String，JComboBox 在java7中，改变只有一次影响
+            改变的通过getSelectedItem 获取不改变的getSelectedIndex 获取保证正确的类型。
+            insertItemAt 可以在指定位置添加元素
+            在比较多的元素时使用DefaultComboBoxModel加载元素，在通过setModel 放入下拉框中
+            参考：char11.CamboBoxTest 代码
+        slider
+            从连续的值中取值使用滑动条，可以设置min max initValue 
+            SwingConstants.VERTICAL 可以设置样式呃
+            滑动值改变的时候会触发ChangeEvent ，通过ChangeListener 进行监听
+            可以通过showing tick 改变滑动条样式
+            event.getSource() 获取时间来源切记，需要进行强转呃
+            slider.setMajorTickSpacing(20);
+            slider.setMinorTickSpacing(5); 是添加相应的刻度呃。需要设置setPaintTicks才能够显示相关的刻度呃
+            setSnapToTicks 可以用于设置和相应的刻度对齐呃。这种对齐时间是有延迟的，是先触发非对齐时间在对齐的。
+            setPaintLabels可以设置刻度的label，可以通过setLabelTable 自定义刻度标签显示字段，通过JLabel设置
+            slider.setInverted(true); 用于反转滑条
+            使用 GridBagLayout 布局方式，在panel中添加panel 的方式进行布局
+            参考char11.SliderFrame
+    Menus(菜单)
+        swing中使用的菜单是下拉式菜单呃，包含menu andsubmenu 在点击某个menu item 的时候会关闭所有的菜单
+        菜单的构建
+            通过new JMenuBar() 创建，通过setJMenuBar 放入JFrame中，menu本身还可以添加其他菜单作为子菜单
+            JMenuItem 添加菜单选项，addSeparator 可以用来分割子菜单。
+            JMenu.add(String s) 可以用于添加一些menu item，
+            Action 是一般添加的事件监听器，提供对listener的一种封装呃（上面有）
+            var exitItem = new JMenuItem(exitAction) 可以通过action 直接构建，名字action 里面有
+        菜单中的图标
+            JMenuItem继承AbstractButton想不到吧，也可以添加图标
+            setHorizontalTextPosition 可以设置图标位置，使用action构造比较的好呃。    
+        checkboxes & radio Button 菜单元素
+            但用户选中的时候会自动关联选中和未选中            
+            JCheckBoxMenuItem 和普通的一样使用，还是放一个组里面，在将组建添加到对应的容器里面
+        Pop-Up menus 弹出式菜单
+            可以悬浮在somewhere
+            new JPopupMenu() 创建弹出式菜单，没有标题的       
+            唐处士菜单需要popup.show(panel, x, y)来设置弹出位置呃
+            弹出的触发是根据系统走的component.setComponentPopupMenu(popup); 一般这样设置就可以了
+        快捷键（keyboard mnemonics）和加速（键盘记忆呃）
+            指定方式{
+                1. new JMenuItem("About", 'A') 构造的时候，跨界键是通过下划线标记的
+                setDisplayedMnemonicIndex 可以指定下标的位置
+                2. 在action中设置aboutAction.putValue(Action.MNEMONIC_KEY, newInteger('A'));
+                3. setMnemonic 才可以为menu添加，menu构造不能直接添加，需要加alt才能选中菜单呃
+                4. 通过setAccelerator 设置Keystroke 来指定所需的快捷键，只能用于menu item，不会打开菜单是直接调用action Event
+                默认将快捷键显示在菜单中
+            } windows 中的alt + f4 和 WindowClosing 时间绑定（系统上的）,在java中不存在这样的accelerator（加速器）
+        menu item启用与关闭
+            使功能在适当的环境下才能使用，setEnabled 来设置功能的机会
+            功能开关的两种策略{
+                1. 每次环境改变调用setEabled 方法 
+                2. 只在展示是修改，通过监听menu selected event 来实现 MenuListener 下有三种方法
+                menuSelected会在菜单显示前被调用呃，这对快捷键没有用呃。
+            }
+        参考练习呃
+            char11.MenuTest 一阵抄写完了，感觉都是我的错，感觉没有压力啊
+        工具栏（toolbars）
+            工具栏可以进行位置的拖动，放在适当的位置，根据选边的不同处在不同位置呃。
+            同居栏的拖动需要在才用边界布局的容器中或者遵循东南西北的布局约束呃。
+            工具栏可以拖到单独的frame中，也可以和原frame 合并呃。
+            创建使用工具栏{                
+                var toolbar = new JToolBar();
+                toolbar.add(blueButton);
+                toolbar.add(blueAction); // 该action 
+                有两种添加功能的方式呃
+                toolbar.addSeparator(); // 用于分割感觉和菜单非常的像啊呃
+                new JToolBar(SwingConstants.VERTICAL) 可以设置为垂直的呃
+            } 
+            工具栏里的鼓组件一般是按钮，但也可以添加别的组件呃
+        tooltips（工具栏提示）
+            通过setToolTipText 设置呃（可以用在任何组件上呃）
+            // 使用action的化
+            exitAction.putValue(Action.SHORT_DESCRIPTION, "Exit");
+    sophisticated layout management(复杂的布局管理呃)
+        终于要开始将布局了，我艹呃
+        新的布局管理器{
+            1. grid bag layout （通过可变的行和列进行布局），很复杂呃
+            2. 用于替代的boxlayer 具有功能缺陷
+            3. spring layout（1.4） 也很难懂被淘汰
+            4.  NetBeans IDE 停供了视图化的布局工具
+            5. 还可以自己写布局管理了
+            一下例子使用grid bag layout 进行布局，逃不出啊呃
+        }
+        the grid bag layout （网格包布局）
+            特点是可以添加相邻的但余个放组件或者合并相邻单元格，不需要装满所有的单元格，可以单独设置每个单元格对齐方式，
+            不同的组件可以占据不同的数量的的单元格呃。
+            使用网格包布局的步骤{
+                1. 创建GridBagLayout 无需告知多少行和列，会在后main操作中自动获取
+                2. 将GridBagLayout 设置为所需布局组件的布局管理器
+                3. 对需要布局的每个组件添加GridBagConstraints， 通过设置属性来决定该组件在grid bag中布局
+                4. add(component, constraints) 将其组件和约束添加 添加该布局管理器的组件中
+            }            
+        grid 中的属性设置
+            gridx，和gridy决定了当前组件左上角的添加位置，gridwidth、gridheight决定了组件需要占据多少的列和行呃。
+            注意：grid 的coordinate 是从0 开始的呃
+            weight Feilds {
+                weightx、weighty 设定为0 后不会在指定的方向发生resize 的自适应呃，该属性时没个使用该布局的组件都共有的
+                设定的没个组件在resize后的占比，一推荐100  和resized保持完全关联
+            }
+            fill and anchor 参数填满和锚定参数{
+                使用fill 来填满剩余的区域
+                使用anchor 设定指定区域布局
+            }
+        padding 间距
+            可以使用GridBagConstraints.insert 添加空白空间，这叫external padding （外部间距）
+            ipadx ，ipady 用于设置内部间距，用于确保组件不会缩放到它的最小尺寸
+        设定约束属性的可选择方法
+            比起gridx，gridy设置绝对值，设置GridBagConstraints.RELATIVE
+            gridheight、gridwidth 设置GridBagConstraints.REMAINDER 用这一行的上一个配置    
+            高飞 goofy 愚蠢呃
+        使用grid bag layout 的技巧{
+            1. 在纸上构建组件布局的草图呃
+            2. 设计一种小的组件放在一个单元中，更大的组件横跨多个单元的组件呃。
+            3. 使用0、1、2、3 标记网格的行列方便布局
+            4. 对每个组件确定是fill、还是achor进行布局选择特定的每个组件的布局方式呃
+            5. 将weight 设置为100 呃
+            6. 需要多次检查GridBagConstraints（限制设置），一个错误可以会免整个布局
+            7. compile ,run ,and enjoy
+        }
+        管理grid bag constraints
+            GBC（书本做个提供的一个用于替代GridBagConstraints 的类）
+            该类继承与GridBagConstraints 提供了更简单的添加组件和布局限制的方法
+            gridy, or gridx, gridy, gridwidth, and gridheight 
+            就是通联这些常用属性的构造呃和setWeight 方法呃
+            反正就是添加了一系列链式代码的方法用于各种设置呃
+            反正就是写了很长的代码呃。
+            复选框长度和里面的属性值有关 
+            该排干不会限制组件原有宽度。
+            参考：char11.ReGridBagTest
+        custom layout managers （自定义布局管理）
+            这里定义的是将所有的组件按照原型布局，听着感觉是那么回事。
+            自定义布局需要重写五个方法{
+                void addLayoutComponent(String s, Component c)
+                void removeLayoutComponent(Component c)
+                Dimension preferredLayoutSize(Container parent)
+                Dimension minimumLayoutSize(Container parent)
+                void layoutContainer(Container parent)
+
+                第五个干正事，1、2 添加删除组件是调用，3、4会确定组件的大小
+                LayoutManager2 中 还添加5个防范用于添加constraints限制呃
+            }
+            Math.PI * i / count 这里的角度换算是啥呃
+            这里用的弧度 π = 180度呃（早忘记了呃）
+            参考： https://zhidao.baidu.com/question/223161864
+    dialog box（对话框）
+        提供对话框悬浮侠士信息，展示更多的详情
+        弹出框分为modal和modeless{
+            modal 关闭以后才可以操作别的窗口
+        }
+// 不知道什么原因我先停止看gui吧，还是看点其他的吧
+char12 concurrency(并发)
+    一个进程可以同时运行多个线程叫做多线程。进程和线程的不同在于进程拥有单独变量，线程共享相同的数据呃，由于共享数据使得线程相对于进程
+    交互更加的简单和高效呃。在一些操作系统中线程的创建和销毁相对于进程占用的空间更加少。
+    这里讲的并发只包含应用编程用到的，系统层级编程需要的内容需要参考 Java Concurrency in Practice by Brian Goetz et al. (Addison-Wesley Professional, 2006).
+
+    什么事线程
+        如何快速的构建一个线程{
+            1. 实现Runnable 接口，实现run() 方法 因为是个功能接口 可以使用lambda表达式构建新的线程
+                Runnable r = () -> { task code }; （记住lambda 表达式是可用用对应的方法接口接受的）
+            2. 使用Runnable 够舰一个Thread对象
+            3. 调用start() 方法开启线程
+        }
+        相较于直接开线程处理任务，使用线程池更好节约创建和销毁开支。
+    线程状态
+        六中状态{
+            1. new (只是线程对象new 还未可以运行)
+            2. runnable
+            3. blocked
+            4. waiting
+            5. timed waiting
+            6. terminated
+        }
+        Runnable thread
+            调用start 方法线程将处于可运行状态，该进程具体运行取决于系统分配给线程的运行时间，
+            java 中并没有将running中的线程算作一个单独状态，依旧属于runnable 状态
+            可运行的线程只能在系统分配的时间内运行，时间用完后系统会抢占该线程，并给其他线程工作的机会
+            所有的现代桌面和服务器操作系统都是使用的抢占式进程安排呃。
+            小型设备可能使用合作市线程调度方式，需要调用yield，或者处于wait或者blocked 状态才会失去控制
+            runnable 状态不能在任何非给定时间内使用
+        blocked and waiting thread 
+            该状态属于灵芝不可用状态，置灰消耗商量的资源通过重新放入thread scheduler 来激活
+            处于该状态的不同情况{
+                1. 但一个线程企图获取一个固有的对象锁（不包括Lock）是锁被别的线程占用，当前线程变成阻塞状态，
+                当所有其他线程释放锁之后且thread scheduler允许该线程持有锁的情况下，当前线程会unblock。
+                2. 当线程根据条件等待别的线程唤醒的时候，该线程的状态处于等待，在实际使用中其实和堵塞并没有区别
+                3. 多种方法具有timeout 参数，调用后会引起线程进入timeout wait 状态，只有时间到后或者适当的通知被接受后才会
+                改变。Thread.sleep, Object.wait, Thread.join, Lock.tryLock, and Condition.await.
+            }   
+        terminated thread
+            线程终止的两种情况{
+                1. 正常结束，run方法正常退出
+                2. run方法因为突发的异常退出
+            }
+        一些常用方法，可以通过getState获取当前线程的状态呃。
+    线程属性（thread properties）
+        中断线程（interrupting Thread）
+            interrupt() 方法可以调用用来终止线程呃，调用时会设置线程中interrupt status ，线程会时不时检查该值判断线程是否被中断。
+            可以调用Thread.currentThread.isInterrupted() 判断是否暂停，但是当线程block状态无法检查中断状态
+            中断不会终止线程，需要线程决定是终止还是继续运行
+            调用interrupted()犯法会清楚当前的中断状态呃。   
+            其实主要就是各种中断状态，和中断异常的判断及抛出
+        守护线程（daemon thread）
+            通过调用 setDaemon(true) 需要在线程start自谦调用呃 就可以设置为守护线程，一种为其他线程提供服务的线程
+            当虚拟机中只有守护线程时，虚拟机会停止运行呃。
+        线程的名称
+            可以用setName() 给线程起名
+        处理未抓取得线程
+            通过实现Thread.UncaughtExceptionHandler来处理这些异常 
+            setUncaughtExceptionHandler()给每个线程单独设置
+            setDefaultUncaughtExceptionHandler() 设置所有线程默认的处理器
+            如果没有设置默认处理器，默认null如果没有设置单独的处理器默认的是ThreadGroup中的处理器
+            Thread group是默认创建线程的管理集合，也可以自己创建，不过现在可以用提供dethread集合进行管理
+            thread group默认对异常的处理{
+                1. 如果有父类则会调用父类的uncaughtException方法
+                2. 接着获取默认处理器，如果不为空则调用默认处理器
+                3. 或者如果Throwable是ThreadDeath的实例就不会发生任何事 
+                4. 或者线程的名字和异常的堆栈踪迹会输出到System.err中
+            }
+        线程的优先级（thread priority）
+            线程在创建时可以设置优先级范围在1-10，默认5
+            线程调度会倾向选择优先级高的线程，但java的线程优先级依赖于宿主平台的线程等级，在映射时一部分等级会映射到相同的等级中
+            在Oracle jvm for linux 中所有的等级被忽视，所有线程拥有相同的线程优先级
+            这个在早期版本java不使用操作系统线程优先级的时候有用，现在是没什么用
+    synchronization(同步)                    
+        由于共享数据，线程在操作同一个数据的时候会出现错误
+        race Condition
+            这张解释并发错误的图有点问题，怨言没有问题{
+                1. Load accounts[to] into a register.
+                2. Add amount.
+                3. Move the result back to accounts[to]
+                可以使用 javap -c -v class 看线程可以中断的每一个步骤
+            }
+            char12.unsync.UnsynchBankTest 错误的数据是将错误的值赋值到共有变量accounts[to] 
+            导致getTotalBalance() 获取的值是错误的（未使用其他线程已经改变的值），但是这里家里睡眠以后总是能回归正确的书好奇怪
+            在这里System.out提高了错误的输出频率，在一块代码块中如果不进行同步设置会在运行的的中间被中断执行其他线程，这种并发错误
+            是不规律的
+        lock Object（锁对象）
+            可以通过synchronized 或者ReentrantLock 来保证同步运行
+            lock对象的使用示例{
+                myLock.lock(); // a ReentrantLock object
+                try
+                {
+                critical section
+                } f
+                inally
+                {
+                myLock.unlock(); // make sure the lock is unlocked even if an exc
+                }
+            }
+            当lock被锁时，别的线程调用lock对象时是无效的，只有第一个线程解锁后才可以调用该对象
+            所以unlock()代码一定要放在finally中，否则会永远被锁呃
+            Lock 不能使用try-with-resource的语法，没有close()方法，而且需要确保不同线程中的lock是同一个对象
+
+            lock 叫做reentrant(可重入函数)因为一个线程可以重复获取其已持有的锁，在同一个代码中可以调用多个加锁的方法，
+            当这些方法都被调用时会添加持锁数count 知道count 为0 时可以废弃锁
+            当想要保护一段代码块修改或检查共有对象的时候需要添加同步锁
+            注意：需要注意在Lock同步代码块中抛出异常，因为finally会释放锁，使 object state 处于一个错误状态就变的和非同步一样了
+            ReentrantLock(boolean fair) 可以构建公平锁，优先选择等待时间长的线程，但是会降低效率一般不使用，而且公平锁不保证公平
+            还得看thread scheduler 的选择
+        Condition object(控制对象)
+            线程运行到关键的节点需要特定的条件才能运行，即使获取锁不满足的条件下也无法运行
+            可以用lock.newCondition()添加条件，不满足条件的时候线程会await()释放锁
+            condition.await() 来控制
+            被睡眠的线程需要signalAll 来唤醒，然后继续取判断条件
+            一般判断放在循环中知道满足条件，
+            当所有的线程都被await而没有唤醒别的线程就会产生死锁情况。
+
+        the synchronized keyword (同步关键词)
+            使用锁和条件关键点{
+                1. 锁保护一段代码，只允许同时只有一个线程运行该代码
+                2. 锁可以管理线程进入一段受保护代码片段
+                3. 一个锁可以关联多个条件对象
+                4. 每个条件对象可以控制已经进入保护片段的线程不执行
+                lock 和 Conditon 提供了在锁程度上更高程度的控制
+            }
+            简单的可以是用synchronized关键字，线程必须获取本质锁才能运行
+            实例：{
+                public synchronized void method()
+                {
+                    method body
+                }
+            }
+            效果约等于{ // 伪代码
+                public void method()
+                    {
+                        this.intrinsicLock.lock();
+                    try
+                    {
+                    method body
+                    }finally {
+                         this.intrinsicLock.unlock(); }
+                    }
+            }
+            the intinsic object 等价拥有一个关联对象，其中wait，notifyAll，notify可以起到和await() 和signalAll() ，signal相同的作用
+            这两方法是Object 类中默认的final方法。
+            所以可以间接的写成wait() 和notify方法不用newCondition() 默认是有个本质对象的    
+            注意：wait() 和notifyAll() 是控制对象对调用的
+            注意静态方法，会直接吧类的Class 对象作为锁，导致无法运行该类其他静态同步方法
+            the limit of intrinic lock and condition {
+                1. 不能中断一个尝试获取锁的线程
+                2. 不能设置一个超时时间，在一个线程尝试获取锁的时候
+                3. 每把锁只有一个条件，变的低效
+            }
+            图鉴使用Lock 和 Condition 对象的情况{
+                1. 在很多情况下都不是用着两种，而是使用阻塞队列（blocking queue），还有会遇到并行流
+                2. 如果synchornized 够用就用
+                3. Lock/Condition只在有额外需求的时候才进行构造
+            }
+        synchronized blocks (同步代码块)
+            除了使用object自带的锁，还可以使用同步代码块来保护代码
+            示例{
+                synchronized (obj) {
+                    critical section
+                }
+            }
+            这杯用来实现一些client-side locking 但这种实现是脆弱容易破坏的非同步的方法调用同步方法并不能保证非同步方法的同步
+            可以使用同步代码块去劫持client-side locking的锁，来实现非同步代码的同步
+            需要注意自己调用方法是否同步
+            jvm 有内置的同步方法支持，但是对同步代码块字节码序列来管理本质锁
+        the monitor concept(监视器概念)
+            提供面对对象的方法，让程序员忽略具体的锁，通过监视器概念可以实现部分解决
+            java中实现具有这些属性{
+                1. 一个监视类只有私有属性
+                2. 这个类每个实例具有一个关连锁
+                3. 所有的方法在都被同一个锁锁定，都会咋爱方法调用时尝试获取锁，return时释放锁，由于
+                所有的属性都是私有，其他线程无法之间访问属性
+                4. 这个锁可以拥有任意顺序的关联条件
+            }   
+            java 实现了宽松的监视概念，每个类都有所和本质条件，如果一个类被synchornized 修饰就可以被视为监视方法
+            但也有不同，可能有损线程安全{
+                1. 属性不必须是私有的
+                2. 方法不必须是同步的
+                3. 本质锁可以被client调用（不在私有） 
+            } 还被人diss了呃
+        volatile fields(会发属性) 什么鬼翻译
+            有事对实例的一到两个属性进行同步太过浪费，但不这样做现代处理器或者编译器会产生大量的错误{
+                1. 多核处理器会暂时在寄存器和内存中持有数据，会导致不同处理上的线程会同时读取同一内存地址值
+                2. 编译器会重新排序指令以获取最大吞吐量，不会改变代码的原意，但是这种重排是假设内存数据置灰被代码中名曲指令
+                更改，但是内存值也可以被其他线程改变。
+            }
+            如果使用锁保护代码，编译器需要尊重锁适时刷新本地缓存，并不会不合理的重编指令顺序
+            细节可以在jsr133 www.jcp.org/en/jsr/detail?id=133 获取
+
+            volatile 提供无锁的机制用于同步实例的一个属性，使用该关键词修饰的属性编译器和虚拟机将会将其置于会被其他线程更新的
+            属性名单
+            该volatile会添加适量的代码确保一个线程改变的值对另一个线程时可见的。
+            volatile 不保证原子性，就是代码的读、写、反转都是可以被打断的，就是说javap -c -v 解析呃后的运行指令依旧不会按照原子性执行
+            但是通过内存的刷新还是可以确保，一个线程对内存的修改对于另一个线程时可见的
+            Volatile variables do not provide any atomicity
+
+        final variables(最终变量)
+            使用final修饰变量也是保证线程的安全的(不过要是引用变量怎么办)
+            在new 的过程中其实也是可能导致线程并行错误，可能别的线程读到null ，但是对象本身属性还是线程不安全需要同步处理
+        atomics 原子性
+            java.util.concurrent.atomic 使用该包下的类可以在不使用lock的情况下来更高效的保证原子性。
+            示例：AtomicLong() 调用incrementAndGet()该方法执行指令过程不会被其他线程中断，这样就能保证线程的安全性。
+            这些类提供了一些基础的方法，如果想要更复杂的操作需要使用updateAndGet()和lambda
+            示例获取最大值（同步）：{
+                largest.updateAndGet(x -> Math.max(x, observed));
+                或者
+                largest.accumulateAndGet(observed, Math::max)； // 通过 a binary operator将原子性的值和提供的参数
+                组合起来
+            }
+            这包底下还有很多光看名字就是没什么胃口类
+            如果有个一非常大的书被多个线程访问，性能会受到影响可以使用LongAdder 和LongAccumulator 来解决这个问题
+            LongAdder 有多个总和是当前值的集合组成，不同的线程可以更新不同的被加数，当线程增加时候也可以增加相应的被加数，
+            这可以用于优化总和在运算过程不重要的情况呃，这种性能提升非常的打。
+            示例{
+                var adder = new LongAdder();
+                for (. . .)
+                pool.submit(() -> {
+                while (. . .) {
+                . . .
+                if (. . .) adder.increment();
+                }
+                });
+                . . .
+                long total = adder.sum();
+            }
+            LongAccumulator 可以使用任意累积操作符，在构造式指定操作符和中立值，
+            var adder = new LongAccumulator(Long::sum, 0);
+            // in some thread. . .
+            adder.accumulate(value);
+            这个累加器有值a1, a2, . . . 所有值被初始化中立值，当调用accumulate的时候会自动将其中的一个更新为
+            ai = ai operation value 
+            这些操作符必须是关联的可以交替的
+            That means that the final result must be independent of the order in which the intermediate values were combined.
+            这意味着最终值与中间值的组合顺序无关。值一天不知道到底怎么比较大小（好奇）
+        deadlocks（死锁）
+            locks 和conditions 不能解决所有问题，特别是所有线程不满足condition的情况下其实会造成死锁
+            可以同过jconsole可以检测挂起的线程
+            使用signal也会因为只唤醒一个线程的原因容易导致死锁呃，死锁需要自己设计避免
+        thread-LongAccumulator variables (线程本地变量)
+            可以通过过public static final ThreadLocal<SimpleDateFormat> dateFormat = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd"))
+            这个lambda表达式构造本地线程变量确保安全
+            dateFormat.get().format(new Date()) get返回当前线程所有的变量
+        stop和suspend 停用的原因
+            尝试在脱离线程协作的情形下控制指定的线程，
+            stop方法内在不安全，且消耗高
+            suspend方法会频繁的导致死锁
+            stop{
+                会立即终止所有的方法包含run方法，并释放锁，回到值对象可能处于前后不一致的状态，并将这种错误带入其他线程，
+                当一个线程通过stop方法停止另一个线程时不知道何时终止是安全可用的，正常使用通过中断来停止线程，中断后的线程会自行在
+                安全是停止运行
+                stp方法会通过认出ThreadDeath 异常释放所有持有的锁
+            }
+            suspend{
+                当suspend 一个线程时，会挂起但不会释放锁知道被resume
+                这种锁一般用在图形界面，由多个不同方法共用同一个锁导致
+            }
+    线程安全的集合（Thread-safe Collection）
+        使用别的线程安全实现替代锁，保证数据结构的线程安全
+        阻塞队列（blocking queues）
+            许多线程问题可以通过一个或多个队列优雅解决（加锁多么的简单粗暴）
+            将所有线程插入到队列并检索消费，可以由多个线程将共用的对象放到队列中，只允许指定线程运行操作共有对象
+            当然这建立在线程安全的队列基础上（由jdk作者提供）
+            阻塞队列会在想满的队列中添加新元素或者通的队列中移除元素导致阻塞
+            阻塞队列可以很好的协调多线程工作，当消费线程工作较慢是会填满队列后造成堵塞
+            阻塞队列的方法又多又拗口 add() element() offer() peak() poll() put() remove() take() 
+            可以使用offer 、poll、 peek进行线程的管理（poll peek通过返回null 代表失败，所以不能添加null值）
+            offer和poll可以设置尝试时间，在一定时间内插入或者移除
+            在java.util.concurrent 中对垒{
+                1. LinkedBlockingDeque（默认无容量上限）
+                2. ArrayBlockingQueue（有选择的公平偏爱降低性能）
+                3. PriorityBlockingQueue （优先级）按优先级进出不是先进先出没有容量上限，但是会在为空时堵塞
+                4. DelayQueue （延时队列）需要元素实现Delay接口，getDelay为负的标识对象已释放可以remove，否则不可以remove
+                5. TransferQueue 允许生产者去等待消费者可以获取下个元素
+            }
+            示例：有一个线程将所有一个子目录的文件放入对量中，由search线程去带阿奎文件并将包含关键字的行打印出来，在最后塞一个假对象
+            用于让最后获取该对象终止 参考：char12.sync.BlockingQueueTest
+           这里遇到个问题阻塞队列是怎么控制多个线程停止，通过每个结束的线程将会导致线程停止的条件重新加入队列就可以，
+           在将所有需要处理的元素加入队列后，最后加入会停止的队列
+        有效maps & sets & queue 
+            concurrent 包下提供了这些实现
+            ConcurrentHashMap，ConcurrentSkipListMap, ConcurrentSkipListSet,ConcurrentLinkedQueue
+            这些通过复杂的算法并发获取数据的不同部分
+            对于过大的集合使用mappingCount 获取长度不用size()
+            concurrent集合返回始终如一的迭代器导致不能反映其创建之后集合的修改，不会抛出ConcurrentModificationException
+            并发hashmap 可以有大量的reader 和固定的writer同时写（默认16，超过会阻塞）
+            不好的hash方法会导致所有元素都装在一个桶中，是hash算法性能无法发挥
+            这就是现在版本将桶由list装换为红黑树从而获取O(log n) 的效率
+        map 记录的原子性更新
+            在并发map中get和put不会导致数据问题，但是无法保证原子性 put方法的更新是没有原子性的，要是并发可能导致没有更新的的情况
+            在老板java中需要使用replace 来实现原子性操作
+            while (!map.replace(word, oldValue, newValue));// 的这样写是不是傻逼啊
+            替代方案{
+                ConcurrentHashMap<String,AtomicLong> 
+                map.putIfAbsent(word, new AtomicLong());
+                map.get(word).incrementAndGet();
+            }
+            现在可以通过compute() 来确保更新的原子性
+            map.compute(word, (k, v) -> v == null ? 1 : v + 1);
+            ConcurrentHashMap 中无法使用null
+            map.computeIfAbsent(word, k -> new LongAdder()).increment(); 只在需要是才会构造LongAdder() 节省性能？
+            在key刚被加入是就进行初始化可以使用merge
+            map.merge(word, 1L, (existingValue, newValue) -> existingValue + newValue);
+            map.merge(word, 1L, Long::sum); 感觉越来越不直观了，也有点直观的感觉
+            使用compute或者merge返回null说明实例已经被移除，这两方法不要做太多的功能，防止堵塞
+            实例，统计一个文件夹下所有java文件有的所有单词总数
+                参考：char12.concurrenthasMap.ConcurrentHashMapTest 使用了线程池来保证同步
+        concurrent hash map 的bulk（大多数）操作
+            保证遍历和操作元素时的一致性
+            主要有三种操作{
+                1. search() 会一直运行知道获取一个非空值
+                2. rduce 联合所有的键或者值通过使用累计方法
+                3. foreach 为所有的键值提供一个方法
+            }
+            每种操作有四种情形{
+                1. operationKeys 值操作键
+                2. operationValues
+                3. operation 操作键和值
+                4. operationEntries 操作Map.Entry对象
+            }
+            进行这些操作的时候需要特殊的平行阈值，当map中的元素超过阈值是批量操作是平行的
+            如果想要在一个线程中运行可以吧阈值设为Long.MAX_VALUE ,如果想最大限度的利用线程可以将阈值设置为1
+            String result = map.search(threshold, (k, v) -> v > 1000 ? k : null); 可以这样找寻 
+            {
+                map.forEach(threshold,
+                    (k, v) -> v > 1000 ? k + " -> " + v : null, // filter and transformer 
+                    System.out::println); // consumer
+                在forEach进行大量操作时会有三个参数，平行阈值，
+                过滤器（传递器）、消费者
+                注意：这是可以用设置进行多线遍历操作的
+            }
+            reduce（归纳有这意思）
+                将累计方法将输入联合，也可以和forEach一样使用
+                {
+                    Integer maxlength = map.reduceKeys(threshold,
+                    String::length, // transformer
+                    Integer::max); // accumulator
+                } 找出其中最大的值
+                当transformer 值选出一个方法是是不会调用 accumulator的
+                reduceValuesToLong 还有这类特殊方法用于处理默认值的问题，这类使用默认值进行累计
+        concurrent set views （并发集合视图）
+            没有ConcurrentHashSet (没有吗一脸懵逼)
+            Set<String> words = ConcurrentHashMap.<String>newKeySet(); //可以这样获取(为啥不封装下呢)
+            Set<String> words = map.keySet(1L); 也可以这样，会给对应的value默认值
+        copy on write arrays
+            CopyOnWriteArrayList 和CopyOnWriteArraySet 会在每次修改的时候做一次复制，这在读取线程比修改线程多是有用。
+            读取是读原来始终如一的集合（但有潜在的信息过时），并可以通过次避免并发问题
+        parallel array algorithms (平行数组算法)
+            Arrays 具有许多的平行操作
+            Arrays.parallelSort 还可以在参数中设置排序边界
+            使用这些方法需要在比较器避免边际影响
+            {
+                Arrays.parallelSetAll(values, i -> i % 10);
+                // fills values with 0 1 2 3 4 5 6 7 8 9 0 1 2 . . .
+            }
+            {
+                Arrays.parallelPrefix(values, (x, y) -> x * y) 
+                可以用于将数组进行制定的操作符的累计
+                对这个x*y 也是可以平行处理的
+                [1, 1
+                    × 2, 3, 3
+                    × 4, 5, 5
+                    × 6, 7, 7
+                    × 8] 先处理一部分
+                这对于特殊目的的硬件，这个算法还是经常使用的
+            }、
+        比较老的线程安全的集合（不要用）
+            Vector、Hashtable 是一开始是线程安全的然后被不线程安全的类替代了
+            通过Collections.synchronizedList 这类方法进行同步的封装将线程不安全的类变为线程安全
+            这种封装的遍历还需要使用client-side locking 防止别的线程更改数据结构
+            现在还是推荐时候java.lang.concurrent 包下的集合 {
+                ConcurrentHashMap 在防卫不同的桶时不会造成阻塞
+                但使用经常修改的集合的时候还是可以使用封装过的ArrayList的
+            }
+    tasks and thread pools （任务和线程池）
+        穿件线程由于要和操作系统交互是非常昂贵的，所以使用线程池取代创建大量短时线程，
+        java本身提供了并发框架用于协调并发任务
+        callable and futures （两个常用lamba接口）
+            Runable 可以认为是封装为一个没有参数的返回值的异步方法
+            Callable 与Runable相似但是有返回值（根据参数类型进行返回）
+            Future 可以用于获取异步计算的结果（我就没有用过啊），这个在计算没有结束前调用get是被阻塞的，{
+                可以通过构造future对象穿个异步线程持有结果，future对象的拥有这可以通过调用get()获取异步计算结果
+                可以用 isDone 进行判断，可以用cancel终止为开启的计算或者mayInterrupt是true的运算
+            }
+            想要在futrue中中断线程需要2个条件{
+                1. 需要futrue的持有对象知道哪个线程正在运行
+                2. 需要调用的线程去监控中断转台，否则也不会有效
+            }
+            Callable 的使用{
+                使用FutureTask 同时实现了Future 和Runnable接口
+                Callable<Integer> task = . . .;
+                var futureTask = new FutureTask<Integer>(task);
+                var t = new Thread(futureTask); // it's a Runnable
+                t.start();
+                . . .
+                Integer result = task.get(); // it's a Future
+
+                更多的是将Callable 传递给执行器进行一步操作
+            }
+        Executors（执行器）
+            提供了一系列静态工厂方法用于构造线程池{
+                newCachedThreadPool （会短时失效）
+                newFixedThreadPool
+                newWorkStealingPool （自适应的）
+                newSingleThreadExecutor 单线程的
+                newScheduledThreadPool 用于安排运行的固定线程池
+                newSingleThreadScheduledExecutor
+            }
+            为了最佳的性能一般线程数是处理器的数量，一般使用固定线程池就好来了
+            单线程池用于性能测试（我感觉你们是有病）
+            一些其他并发任务处理实现{
+                javaEE提供了 ManagedExecutorService
+                大部分的web框架也会提供想对应的并发任务处理
+            }
+            可一件件讲讲Runnable 和Callable 传递给ExecutorService 通过 {
+                Future<T> submit(Callable<T> task)
+                Future<?> submit(Runnable task) 运行获取为null
+                Future<T> submit(Runnable task, T result)
+            }
+            调用shutdown()会不在接受新任务，并在所有线程结束后，pool die 
+            使用线程池的一般步骤{
+                1. 调用金泰方法回去线程池
+                2. 调用submit 方法 提交 Callabe 和Runable 对象
+                3. hang on 返回的Future对象用于获取结果或取消任务
+                4. 调用shutdown() 在不submit 任何task的时候
+            }
+            ScheduledExecutorService 可以用于安排或者重复任务（用的自己去看）
+        contolling groups of tasks (控制任务分组)
+            使用executor 除了通过线程池来提高效率，还可以简单的控制一组相关任务
+            invokeAny 可以返回一个Callable集合提交的结果，无需知道具体运行的先后顺序，只要一个有结果就返回
+            比如进行Rsa类型的文件破一时
+            invokeAll 会运行直到所有都完成（有点用啊） {
+                List<Callable<T>> tasks = . . .;
+                List<Future<T>> results = executor.invokeAll(tasks);
+                for (Future<T> result : results)
+                processFurther(result.get());
+                
+                下面是提交任务到执行器里，会用一个阻塞来容纳为可用的任务结果
+                var service = new ExecutorCompletionService<T>(executor);
+                for (Callable<T> task : tasks) service.submit(task);
+                for (int i = 0; i < tasks.size(); i++)
+                processFurther(service.take().get());
+            }
+            可以用这个去比较下并行效率
+            是用invokeAny 需要通过异常的方式终止线程，并监视线程的状态来决定是否终止所有其他线程
+            {
+                invokeAny 何时终止需要特别的判断
+                写法倒是非常的诡异
+                {
+                    public static Callable<Path> searchForTask(String word, Path path)
+                    {
+                    return () -> {
+                        try (var in = new Scanner(path))
+                        {
+                        while (in.hasNext()){
+                            if (in.next().equals(word)) return path;
+                                if (Thread.currentThread().isInterrupted()){   // 这里是判断是否正常终止线程
+                                    System.out.println("Search in " + path + " canceled."
+                                    return null;
+                                }   
+                            }
+                            throw new NoSuchElementException();  // 异常终止线程   
+                            }
+                        };
+                    }
+                }
+            }
+            一般java最简单的线程池任务{
+                1. 使用callable 构建task
+                2. 构建Excutor inovkeAll 所有的任务
+                3. 遍历Future 来处理结果集
+            }
+            ExecutorService cast to ThreadPoolExecutor 来获取运行时信息
+            反正使用java自带的执行器来管理线程就是了，虽然我也是不怎么会用就是了。
+        the fork-join framework (并行框架)
+            用于根据处理器数目来建立线程的并行框架（java7 引入）
+            就是插接问题处理后在汇总结果，在图片渲染的时候就可以用到
+            通过继承RecursiveTask<T> 或者RecursiveAction 类并实现compute 方法来拆解、运行和整合结果
+            写一个将数组拆分分别计数的程序{
+                这里使用join() 来获取结果因为不会抛出异常，compute中不允许异常（好多并发都是这样）
+            }
+            fork-join 一个平衡工作量的机制 （work stealing）{
+                每个工作线程会有一个deque（双端队列），每个线程将subtask添加在队列前端（只有该线程访问队列前端）
+                当有线程限制的时候，会从别的deque末尾获取task,由于比较大的subtask位于末尾，可以提高线程利用率
+                fork-join pools 充分利用非阻塞的工作量，但是阻塞的任务需要使用ForkJoinPool.ManagedBlocke来处理
+                参考代码：char12/forkjoin/ForkJoinTest.java
+            }
+    
+    asynchronous computations (异步计算)
+        克服并发计算需要等其他线程完成的问题（同步计算），进行异步计算
+        Completable Futures (可完备的future 后面补全？)
+            前面的Future调用get会在结果可用时一直堵塞，通过注册callback（运行在同一线程），一有结果就返回的机制实现
+            异步计算{
+                CompletableFuture<String> f = . . .;
+                f.thenAccept(s -> Process the result string s);
+            }
+            HttpClient 会提供CompletableFuture 但大部分时候需要自己构造
+            通过CompletableFuture.supplyAsync 将结果future对象提交给执行器 {
+                public CompletableFuture<String> readPage(URL url)
+                    {
+                        return CompletableFuture.supplyAsync(() ->
+                        {
+                            try
+                            {
+                                return new String(url.openStream().readAllBytes(), "U8");
+                            }catch (IOException e)
+                            {
+                                throw new UncheckedIOException(e);
+                            }
+                        , executor);
+                    }
+                // 使用这种方法会使用默认执行器由 ForkJoinPool.commonPool() 返回
+            }
+            CompletableFuture 会出现获取结果完成和未捕获异常两种情况通过whenComplete来处理两种情况{
+                f.whenComplete((s, t) -> {
+                    if (t == null) { Process the result s; }
+                    else { Process the Throwable t; }
+                });
+            }
+            CompletableFuture通过设置完成值来确保可完备化，默认使用supplyAync也会设置
+            通过f.completeExceptionally(t); 可以是future 通过异常来完成
+            在不同线程调用complete 和completeExceptionally是安全的未完成不会造成影响，可以通过
+            isDone来判断是否完成
+            Future 和CompletableFuture 一部分区别{
+               CompletableFuture 不会被cancel中断，而是返回CancellationException 作为异常完场提供  
+               但是有一些方法如supplyAsync返回的和CompletableFuture是本质上的中断
+            }
+        composing completable futures (可完备future的组成)
+            当通过callback来实现无阻塞的异步计算，在调用另一个异步步骤时也会传递一个callback，如此往复多次异步调用后
+            会难以实现对a control flow in a set of callable (你控制不住了)
+            CompletableFuture 通过 composing asynchronous tasks into a processing pipeline（构成的异步任务放入一个处理管道）
+            的机制来处理上述问题
+            示例获取一个网页上的所有图片{
+                1. public void CompletableFuture<String> readPage(URL url) // 获取所有文本
+                2. public List<URL> getImageURLs(String page) // 获取图片url
+                3. CompletableFuture<String> contents = readPage(url);
+                    CompletableFuture<List<URL>> imageURLs =
+                    contents.thenApply(this::getLinks); // 获取图片
+                通过thenApply 不会堵塞，建博会返回一个future在第一个future完成时候，并将其传递给getImageURLs方法
+                并通过这个方法获取最终值（感觉还是链式管理啊，难道是得到一部分给一部分，造成可完备结果集）
+                这样所有代码就在一起（说的我看的懂一样呃）
+            }
+            CompletableFuture 有许多变体方法都是通过function interface 来获取结果{
+                thenCompose 用于接受 a map of CompletableFuture {
+                    Here we have two functions T -> CompletableFuture<U> and U ->
+                    CompletableFuture<V>. Clearly, they compose to a function T ->
+                    CompletableFuture<V> if the second function is called when the first
+                    one has completed. That is exactly what thenCompose does.
+                    就是前面多次异步调用
+                }
+                处理异常{
+                    CompletableFuture<List<URL>> imageURLs = readPage(url)
+                    .exceptionally(ex -> "<html></html>") //反正最后都是返回CompletableFuture
+                    .thenApply(this::getImageURLs)
+                    completeOnTimeout 方法可以处理超时异常
+                    orTimeout 会在超时时抛出异常
+                    // java 8 这里的链式方法，是通过塞一个个lambda方法来构建一个所需的类，而不需要去实际写一个类，
+                    而是根据自己的需要加载一个塞满lambda方法的自己所需的类
+                }
+                还有combine 方法联合不同的CompletableFuture {
+                    可以使都完成执行给定的函数或者线程
+                    也可以只完成一个
+                    allOf 会返回在所有CompletableFuture 完成时
+                    anyOf 在有一个完成时就返回，但不会终止正在进行的任务
+                }
+                这里的方法实质是接受 CompletionStage 作为参数，该接口用于描述异步计算的组成，CompletableFuture
+                同时实现了CompletionStage 和Future 接口
+            }
+            案例一个读取网页图片并存储的代码，和所有方法返回CompleteFuture的消耗时间{
+                char12.completableFutures.CompletableFutureTest
+            }  
+        long-running tasks in User interface callback ()
+            当运行耗时的任务时不能放在用户接口中，需要放在单独工作线程中不要影响用户其他操作。
+            由于user interface 是线程不安全的（swing ,android等）因此不能操作线程的接口元素否则会造成线程不安全，
+            如果除非用户UI线程调用用户界面线程就会报错。
+            UI线程通过安排任何UI更新来保证线程安全{
+                swing提供SwingWorker
+                javaFx提供 Task
+                android 提供AsyncTask
+                用于将worker thread 的处理更新告知UIthread 来进行最后的处置
+            }
+            一个用于界面用于打开文件，需要根据工作线程进度改变open和canel的状态{
+                1. 每个工作单元后，更新Ui来反应进度
+                2. 在工作完成后，对UI嘴个最后改变
+                在swing中通过调用doinbackground() 开新线程，publish来通知调用 时间分发线程的process来通知实时处理进度，done来通知完成
+                process 和done 都运行在 in the event dispatch线程
+                SwingWorker<T, V>  T 处理结果 V 处理对象 返回Future 会通过堵塞来确保结果，也可以额调用Future的cancel来取消任务
+                process会接受List<V>lai 包含说有的结果
+            }
+            {
+                单独线程读文本，1行通知下进度，最后一行更新下ui状态
+                参考：char12/swingworker/SwingWorkerTest.java代码
+            }
+    processes(进程)
+        使用不同的程序运行，使用ProcessBuilder和Process可以使命令运行在一个分开的系统进程上有自己的标准输入输出错误流
+        构建进程
+            使用你想运行的指令来运行，可以是List<String>或者是String {
+                var builder = new ProcessBuilder("gcc", "myapp.c");  
+                第一个命令必须是可执行的而不是脚本，如windows代开文件夹 dir不是可执行命令需要使用
+                 "cmd.exe", "/C", and "dir"；
+            }
+            每个进程都有自己的工作目录用于决定相对目录一般和jvm默认保持一致（就是启动java program的目录）可以使用directory
+            方法进行修改
+            ProcessBuilder所有的方法是返回ProcessBuilder 的所以可以使用链式调用
+            获取输入、输出、错误流{
+                OutputStream processIn = p.getOutputStream();
+                InputStream processOut = p.getInputStream();
+                InputStream processErr = p.getErrorStream();
+                这里的输入流式jvm的输出流，反之亦然。这个进程是和jvm直接交换的
+                abstract OutputStream getOutputStream()
+                gets a stream for writing to the input stream of the process.
+                abstract InputStream getInputStream()
+                abstract InputStream getErrorStream()
+                gets an input stream for reading the output or error stream of the
+                process.    // 不要混乱了 这里都是jvm的流的名称
+
+                指定各个流需要和jvm保持一致 {
+                    builder.redirectIO() 可以直接指定3个流保持一致
+                    
+                    builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+                    ProcessBuilder.Redirect.INHERIT 可以直接继承某些流
+
+                    可以沟通难过File将流指向文件{
+                        builder.redirectInput(inputFile)
+                                .redirectOutput(outputFile)
+                                .redirectError(errorFile)
+                    }
+
+                    builder.redirectErrorStream(true) 可以用来将输出和错误流合并
+
+                    次改环境变量{
+                        Map<String, String> env = builder.environment();
+                        env.put("LANG", "fr_FR");
+                        env.remove("JAVA_HOME");
+                        Process p = builder.start();
+                    }
+                }
+            }
+        运行进程
+            感觉可以用来写复杂点的windows用的脚本
+            使用start方法启动进程，可以操作已经配置的流{
+                Process process = new ProcessBuilder("/bin/ls", "-l")
+                                    .directory(Path.of("/tmp").toFile())
+                                    .start();
+                                    try (var in = new Scanner(process.getInputStream())) {
+                                    while (in.hasNextLine())
+                                    System.out.println(in.nextLine());
+                                    } // 为啥要这样做神经病吧，调用外部程序吗
+                process streams 的 缓存空间是有限制的，需要input后及时output
+                有大量的读入和输出之后需要单独开线程处理这种情况
+            }
+            调用process.waitFor 来等待程序运行结束，为了表面超时的不确定性可以设置超时时间{
+                long delay = . . .;
+                if (process.waitfor(delay, TimeUnit.SECONDS)) {
+                    int result = process.exitValue();
+                    . . .
+                } else {
+                    process.destroyForcibly();
+                }
+                // 不超时可以通过exitValue获取运行记过
+                如果不想等待可以离开保持运行，并通过isAlive来判断进程是否运行，并通过Destory或者destroyForcibly
+                来结束进程，这两结束进程不同是依赖于平台的。
+            }
+            可以接受异步通知，通过process.onExit()来获取CompletableFuture<Process> 来管理任何行为{
+                process.onExit().thenAccept(
+                    p -> System.out.println("Exit value: " + p.exitValue()));
+            }
+        process handles (进程句柄)
+            ProcessHandle 来获取当前机器上的进程信息。
+            获取线程句柄的4中 方法{
+                1. 通过Process 的 p.toHandle来获取
+                2.通过系统进程id来获取 ProcessHandle.of(id)
+                3. Process.current() 来获取当前运行在在jvm的进程的句柄
+                4. ProcessHandle.allProcesses() 来获取对当前进程可见的所有操作系统上的所有进程句柄
+                allProcesses 返回只是单签流的一个快照，里面的进程可能被中断，也会有新的进程被开启
+            }
+            桶process handle 可以获取进程id，父继承，子进程、衍生进程{
+                long pid = handle.pid();
+                Optional<ProcessHandle> parent = handle.parent();
+                Stream<ProcessHandle> children = handle.children();
+                Stream<ProcessHandle> descendants = handle.descendants();
+            }
+            可以通过info 方法来获取ProcessHandle.Info 返回{
+                Optional<String[]> arguments()
+                Optional<String> command()
+                Optional<String> commandLine()
+                Optional<String> startInstant()
+                Optional<String> totalCpuDuration()
+                Optional<String> user()
+                使用Optional 返回因为游戏系统无法返回某些信息
+            }
+            ProcessHandle具有出waitFor与Process类似的方法用于监视和终止进程。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

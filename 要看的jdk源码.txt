@@ -21,3 +21,4 @@ Collections
 集合中的同步view 集合中很多都可以看 
 Collection 中添加了一些lambda方法
 swing的继承体系，一些组件的实现方式，不过swing的体系真的挺复杂的
+swing 的Action 封装，可以通过它构建非常多的组件呃
